@@ -7,7 +7,10 @@
   <style>
     body { margin: 0; padding: 0; background-color: #0a0f1d; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .hacker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(10,15,29,0.95) 0%, rgba(5,7,12,0.98) 100%); z-index: -1; }
-    .container { text-align: center; background: rgba(15, 23, 42, 0.85); padding: 40px; border-radius: 12px; border: 2px solid #00ffcc; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2); max-width: 500px; width: 90%; }
+    
+    /* 加上 position: relative; 讓版本號能以這個框框為基準定位 */
+    .container { position: relative; text-align: center; background: rgba(15, 23, 42, 0.85); padding: 40px; border-radius: 12px; border: 2px solid #00ffcc; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2); max-width: 500px; width: 90%; }
+    
     .title { font-size: 2.5rem; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); margin-bottom: 10px; }
     .egg { color: #ff0055; text-shadow: 0 0 10px #ff0055; }
     .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 30px; }
@@ -24,7 +27,10 @@
     .btn-sub-join { font-size: 0.9rem; padding: 10px 15px; border-color: #9933ff; color: #9933ff; cursor: pointer; background: transparent; }
     .btn-sub-join:hover { background: #9933ff; color: #fff; }
     .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; line-height: 1.4; }
-    .game-table { width: 92%; max-width: 950px; background: rgba(15, 23, 42, 0.93); border: 2px solid #00ffcc; border-radius: 16px; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.15); margin: 10px auto; }
+    
+    /* 遊戲桌也加上 position: relative; */
+    .game-table { position: relative; width: 92%; max-width: 950px; background: rgba(15, 23, 42, 0.93); border: 2px solid #00ffcc; border-radius: 16px; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.15); margin: 10px auto; }
+    
     .table-title { text-align: center; color: #00ffcc; font-size: 1.5rem; margin: 0 0 20px 0; }
     
     /* 🌹 完美修復：CSS 自製 Ado 霓虹玫瑰官方頭像（保證100%不破圖） */
@@ -53,8 +59,8 @@
     .thinking-blink { animation: blink 0.8s infinite alternate; color: #9933ff !important; }
     @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    /* 新增：左下角版本號的 CSS */
-    .version-text { position: fixed; bottom: 10px; left: 15px; color: #94a3b8; font-size: 0.75rem; z-index: 100; pointer-events: none; opacity: 0.8; }
+    /* 修改：將 fixed 改為 absolute，並調整位置在綠色框框右下角 */
+    .version-text { position: absolute; bottom: 10px; right: 15px; color: #94a3b8; font-size: 0.75rem; z-index: 100; pointer-events: none; opacity: 0.6; }
   </style>
 
   <script type="module">
@@ -78,8 +84,6 @@
 </head>
 <body>
   <div class="hacker-bg"></div>
-  
-  <div class="version-text">version : 1.0</div>
 
   <div class="container" id="main-menu">
     <h1 class="title">⚡ BLACK JACK <span class="egg">🌹</span></h1>
@@ -97,6 +101,8 @@
       </div>
       <div id="status-display" class="status-text"></div>
     </div>
+    
+    <div class="version-text">version : 1.0</div>
   </div>
 
   <div id="game-table" class="game-table hidden">
@@ -137,6 +143,8 @@
       <button class="game-btn btn-restart hidden" id="restart-btn" onclick="handleRestart()">🔄 重開新局</button>
       <button class="game-btn btn-back hidden" id="back-btn" onclick="backToMenu()">🏠 回主畫面</button>
     </div>
+    
+    <div class="version-text">version : 1.0</div>
   </div>
 
   <script>
