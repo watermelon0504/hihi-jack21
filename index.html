@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚡ JACK 21: MATRIX</title>
+  <title>⚡ JACK 21: Ado</title>
   <style>
     body { margin: 0; padding: 0; background-color: #0a0f1d; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .hacker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(10,15,29,0.95) 0%, rgba(5,7,12,0.98) 100%); z-index: -1; }
@@ -26,14 +26,17 @@
     .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; line-height: 1.4; }
     .game-table { width: 92%; max-width: 950px; background: rgba(15, 23, 42, 0.93); border: 2px solid #00ffcc; border-radius: 16px; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.15); margin: 10px auto; }
     .table-title { text-align: center; color: #00ffcc; font-size: 1.5rem; margin: 0 0 20px 0; }
+    
+    /* 🌹 完美修復：CSS 自製 Ado 霓虹玫瑰官方頭像（保證100%不破圖） */
     .dealer-section { text-align: center; background: rgba(30, 41, 59, 0.4); padding: 15px; border-radius: 8px; border: 1px dashed #00ffcc; }
     .avatar-container { display: flex; justify-content: center; margin-bottom: 8px; }
-    .dealer-avatar { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #00ffcc; box-shadow: 0 0 12px rgba(0, 255, 204, 0.5); object-fit: cover; }
+    .ado-css-avatar { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.6); background: radial-gradient(circle, #1e1b4b 0%, #020617 100%); display: flex; justify-content: center; align-items: center; font-size: 2.2rem; cursor: default; user-select: none; }
+    
     .purple-line { border: 0; height: 1px; background: linear-gradient(90deg, transparent, #9933ff, transparent); margin: 20px 0; }
     .players-grid { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
-    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 10px; text-align: center; flex: 1; min-width: 170px; }
+    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 10px; text-align: center; flex: 1; min-width: 170px; transition: all 0.5s; }
     .active-slot { border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.15); }
-    .turn-slot { border-color: #9933ff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.3); }
+    .turn-slot { border-color: #9933ff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.4); background: rgba(153, 51, 255, 0.05); }
     .card-row { display: flex; justify-content: center; gap: 6px; min-height: 80px; margin: 10px 0; flex-wrap: wrap; }
     .card { width: 45px; height: 68px; background: #0f172a; border: 2px solid #00ffcc; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1rem; color: #00ffcc; box-shadow: 0 0 6px rgba(0, 255, 204, 0.2); animation: cardIn 0.3s ease forwards; }
     @keyframes cardIn { 0% { opacity: 0; transform: translateY(-15px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -92,8 +95,8 @@
 
   <div id="game-table" class="game-table hidden">
     <h2 class="table-title">⚡ JACK 21 ⚡</h2>
-    <div class="dealer-section">
-      <div class="avatar-container"><img class="dealer-avatar" id="host-img" src=""></div>
+    <div class="dealer-section" id="slot-dealer">
+      <div class="avatar-container"><div class="ado-css-avatar">💙🌹</div></div>
       <h3>[ HOST: AI-ADO ]</h3>
       <div id="dealer-cards" class="card-row"></div>
       <p>目前點數: <span id="dealer-score">??</span></p>
@@ -101,7 +104,7 @@
     <div id="turn-indicator" class="turn-indicator hidden"></div>
     <hr class="purple-line">
     <div class="players-grid" id="players-container">
-      <div class="player-slot active-slot" id="slot-p1">
+      <div class="player-slot" id="slot-p1">
         <h4 id="name-p1" style="color: #00ffcc;">PLAYER_01</h4>
         <div id="p1-cards" class="card-row"></div>
         <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
@@ -135,6 +138,7 @@
     let currentMode = ""; let sDeck = [], sDealer = [], sHands = [[],[],[],[]], sReveal = false;
     let mRoomCode = null, mRole = null, mData = null, mAlerted = false;
     const sleep = ms => new Promise(res => setTimeout(res, ms));
+    const getThinkingTime = () => Math.floor(Math.random() * 6000) + 4000;
 
     function toggleMultiMenu() { document.getElementById("multi-menu").classList.toggle("hidden"); }
     function backToMenu() { location.reload(); }
@@ -180,7 +184,6 @@
     // ================= 單人模式邏輯 =================
     function startSingleMode() {
       currentMode = "single"; document.getElementById("main-menu").classList.add("hidden"); document.getElementById("game-table").classList.remove("hidden");
-      document.getElementById("host-img").src = "https://i.scdn.co/image/ab6761610000e5ebc18a2b535780a400cc0cb1fb";
       document.getElementById("name-p1").innerText = "YOU (你)"; 
       document.getElementById("name-p2").innerText = "ROBOT_02 (AI)"; 
       document.getElementById("name-p3").innerText = "ROBOT_03 (AI)";
@@ -197,6 +200,7 @@
         let tag = document.getElementById("result-p" + i); tag.innerText = ""; tag.className = "result-tag";
         document.getElementById("slot-p" + i).className = (i===1) ? "player-slot active-slot" : "player-slot";
       }
+      document.getElementById("slot-dealer").className = "dealer-section";
       updateSingleUI();
     }
     
@@ -216,15 +220,28 @@
     async function singleStand() {
       document.getElementById("hit-btn").classList.add("hidden"); document.getElementById("stand-btn").classList.add("hidden");
       for(let i=1; i<4; i++) await runAiRobot(i, sHands[i]);
+      
+      document.getElementById("slot-dealer").className = "dealer-section turn-slot";
       sReveal = true; updateSingleUI();
-      while (calcScore(sDealer) < 17) { document.getElementById("dealer-score").innerHTML = "<span class='thinking-blink'>⏳ 莊家補牌...</span>"; await sleep(1000); sDealer.push(sDeck.pop()); updateSingleUI(); }
+      document.getElementById("dealer-score").innerHTML = "<span class='thinking-blink'>⏳ 莊家 AI-ADO 正在深思 (4-10秒)...</span>";
+      await sleep(getThinkingTime());
+
+      while (calcScore(sDealer) < 17) { 
+        document.getElementById("dealer-score").innerHTML = "<span class='thinking-blink'>⚡ 莊家點數小於17，補牌中...</span>"; 
+        await sleep(800); sDealer.push(sDeck.pop()); updateSingleUI(); 
+      }
+      document.getElementById("slot-dealer").className = "dealer-section";
+      
       judgeFinalResult(sHands[0], sHands[1], sHands[2], sHands[3], sDealer);
       document.getElementById("restart-btn").classList.remove("hidden"); document.getElementById("back-btn").classList.remove("hidden");
     }
     
     async function runAiRobot(idx, hand) {
       const tag = document.getElementById(`result-p${idx+1}`); const slot = document.getElementById(`slot-p${idx+1}`);
-      slot.className = "player-slot turn-slot"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 思考中..."; await sleep(1000);
+      slot.className = "player-slot turn-slot"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 計算賠率中 (4-10秒)..."; 
+      
+      await sleep(getThinkingTime());
+      
       while (calcScore(hand) < 17) { tag.innerText = "⚡ 要牌..."; await sleep(800); hand.push(sDeck.pop()); updateSingleUI(); }
       tag.className = "result-tag"; tag.style.color = "#9933ff"; tag.innerText = "🔒 停牌"; slot.className = "player-slot"; await sleep(400);
     }
@@ -268,7 +285,6 @@
 
     function startMultiModeUI() {
       currentMode = "multi"; document.getElementById("main-menu").classList.add("hidden"); document.getElementById("game-table").classList.remove("hidden");
-      document.getElementById("host-img").src = "https://i.scdn.co/image/ab6761610000e5ebc18a2b535780a400cc0cb1fb";
       
       if (mData.gameState === "playing") { mAlerted = false; window.aiTriggered = false; }
 
@@ -280,11 +296,18 @@
       document.getElementById("turn-indicator").innerText = isMyTurn ? "⚡ 輪到你了！" : (mData.gameState === "playing" ? `⏳ 等待 ${mData.currentTurn} 操作...` : "🏁 結算中...");
       document.getElementById("hit-btn").disabled = !isMyTurn; document.getElementById("stand-btn").disabled = !isMyTurn;
       
-      // 🔮 關鍵修改：對戰進行中時，隱藏對方的卡牌（第三個參數傳入是否要隱藏）
-      // 如果遊戲結束了(finished)，全部掀開。否則，如果你是P1就隱藏P2，你是P2就隱藏P1。
+      for (let i = 1; i <= 4; i++) { document.getElementById(`slot-p${i}`).className = "player-slot"; }
+      document.getElementById("slot-dealer").className = "dealer-section";
+      
+      if (mData.currentTurn === "P1") document.getElementById("slot-p1").className = "player-slot turn-slot";
+      else if (mData.currentTurn === "P2") document.getElementById("slot-p2").className = "player-slot turn-slot";
+      else if (mData.currentTurn.includes("ROBOT_03")) document.getElementById("slot-p3").className = "player-slot turn-slot";
+      else if (mData.currentTurn.includes("ROBOT_04")) document.getElementById("slot-p4").className = "player-slot turn-slot";
+      else if (mData.currentTurn.includes("AI-ADO")) document.getElementById("slot-dealer").className = "dealer-section turn-slot";
+
       let hideP1 = (mData.gameState !== "finished" && mRole !== "P1");
       let hideP2 = (mData.gameState !== "finished" && mRole !== "P2");
-      let hideBots = (mData.gameState !== "finished"); // 機器人在遊戲結束前也保持神祕
+      let hideBots = (mData.gameState !== "finished");
 
       updateSlotUI(0, mData.p1Hand, hideP1); 
       updateSlotUI(1, mData.p2Hand, hideP2);
@@ -317,14 +340,28 @@
     }
 
     async function runMultiAiSequence() {
-      let dh = [...(mData.dealerHand||[])], p3 = [...(mData.p3Hand||[])], p4 = [...(mData.p4Hand||[])], dk = [...(mData.deck||[])];
+      let dk = [...(mData.deck||[])], p3 = [...(mData.p3Hand||[])], p4 = [...(mData.p4Hand||[])], dh = [...(mData.dealerHand||[])];
+      
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: "ROBOT_03 (AI沉思中)" });
+      await sleep(getThinkingTime());
       while(calcScore(p3) < 17) p3.push(dk.pop());
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { p3Hand: p3, deck: dk });
+
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: "ROBOT_04 (AI沉思中)" });
+      await sleep(getThinkingTime());
       while(calcScore(p4) < 17) p4.push(dk.pop());
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { p4Hand: p4, deck: dk });
+
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: "HOST: AI-ADO (莊家考量中)" });
+      await sleep(getThinkingTime());
       while(calcScore(dh) < 17) dh.push(dk.pop());
-      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { p3Hand: p3, p4Hand: p4, dealerHand: dh, deck: dk, gameState: "finished", dealerReveal: true });
+      
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { 
+        p3Hand: p3, p4Hand: p4, dealerHand: dh, deck: dk, 
+        gameState: "finished", dealerReveal: true, currentTurn: "賽局結算" 
+      });
     }
 
-    // ================= 勝負評判 =================
     function judgeFinalResult(p1, p2, p3, p4, dealer) {
       const dS = calcScore(dealer); const scores = [p1,p2,p3,p4].map(h => calcScore(h));
       scores.forEach((s, i) => {
