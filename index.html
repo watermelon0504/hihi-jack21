@@ -5,158 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>⚡ JACK 21</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #0a0f1d;
-      color: #e2e8f0;
-      font-family: 'Courier New', Courier, monospace;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .hacker-bg {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(180deg, rgba(10,15,29,0.95) 0%, rgba(5,7,12,0.98) 100%);
-      z-index: -1;
-    }
-
-    .container {
-      text-align: center;
-      background: rgba(15, 23, 42, 0.85);
-      padding: 40px;
-      border-radius: 12px;
-      border: 2px solid #00ffcc;
-      box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
-      max-width: 500px;
-      width: 90%;
-    }
-
-    .title {
-      font-size: 2.5rem;
-      color: #00ffcc;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-      margin-bottom: 10px;
-    }
-
+    body { margin: 0; padding: 0; background-color: #0a0f1d; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .hacker-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(10,15,29,0.95) 0%, rgba(5,7,12,0.98) 100%); z-index: -1; }
+    .container { text-align: center; background: rgba(15, 23, 42, 0.85); padding: 40px; border-radius: 12px; border: 2px solid #00ffcc; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2); max-width: 500px; width: 90%; }
+    .title { font-size: 2.5rem; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); margin-bottom: 10px; }
     .egg { color: #ff0055; text-shadow: 0 0 10px #ff0055; }
     .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 30px; }
     .menu-box { display: flex; flex-direction: column; gap: 15px; }
-
-    .btn {
-      background: transparent;
-      border: 2px solid #00ffcc;
-      color: #00ffcc;
-      padding: 15px 25px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-family: inherit;
-    }
+    
+    .btn { background: transparent; border: 2px solid #00ffcc; color: #00ffcc; padding: 15px 25px; font-size: 1.1rem; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.3s; font-family: inherit; }
     .btn:hover { background: #00ffcc; color: #0a0f1d; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); }
     .btn-purple { border-color: #9933ff; color: #9933ff; }
     .btn-purple:hover { background: #9933ff; color: #fff; box-shadow: 0 0 20px rgba(153, 51, 255, 0.4); }
     .hidden { display: none !important; }
-
     .input-group { display: flex; gap: 10px; margin-top: 10px; }
     input[type="text"] { flex: 1; background: rgba(30, 41, 59, 0.8); border: 1px solid #9933ff; border-radius: 6px; padding: 10px; color: #fff; font-family: inherit; }
-    .btn-sub { font-size: 0.9rem; padding: 8px; border-color: #64748b; color: #64748b; }
+    .btn-sub { font-size: 0.9rem; padding: 8px; border-color: #64748b; color: #64748b; cursor: pointer; background: transparent;}
     .btn-sub:hover { background: #64748b; color: #fff; }
-    .btn-sub-join { font-size: 0.9rem; padding: 10px 15px; border-color: #9933ff; color: #9933ff; }
+    .btn-sub-join { font-size: 0.9rem; padding: 10px 15px; border-color: #9933ff; color: #9933ff; cursor: pointer; background: transparent;}
     .btn-sub-join:hover { background: #9933ff; color: #fff; }
     .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; line-height: 1.4; }
 
     /* 牌桌設定 */
-    .game-table {
-      width: 92%;
-      max-width: 950px;
-      background: rgba(15, 23, 42, 0.93);
-      border: 2px solid #00ffcc;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 0 40px rgba(0, 255, 204, 0.15);
-      margin: 10px auto;
-    }
-
+    .game-table { width: 92%; max-width: 950px; background: rgba(15, 23, 42, 0.93); border: 2px solid #00ffcc; border-radius: 16px; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.15); margin: 10px auto; }
     .table-title { text-align: center; color: #00ffcc; font-size: 1.5rem; margin: 0 0 20px 0; }
-
-    .dealer-section {
-      text-align: center;
-      background: rgba(30, 41, 59, 0.4);
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px dashed #00ffcc;
-    }
-
+    .dealer-section { text-align: center; background: rgba(30, 41, 59, 0.4); padding: 15px; border-radius: 8px; border: 1px dashed #00ffcc; }
     .avatar-container { display: flex; justify-content: center; margin-bottom: 8px; }
-    .dealer-avatar {
-      width: 75px;
-      height: 75px;
-      border-radius: 50%;
-      border: 2px solid #00ffcc;
-      box-shadow: 0 0 12px rgba(0, 255, 204, 0.5);
-      object-fit: cover;
-    }
-
+    .dealer-avatar { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #00ffcc; box-shadow: 0 0 12px rgba(0, 255, 204, 0.5); object-fit: cover; }
     .purple-line { border: 0; height: 1px; background: linear-gradient(90deg, transparent, #9933ff, transparent); margin: 20px 0; }
-    .players-grid { display: flex; justify-content: center; gap: 30px; margin-bottom: 25px; }
-
-    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 20px; text-align: center; width: 40%; min-width: 200px; }
+    
+    .players-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 12px; text-align: center; flex: 1; min-width: 180px; }
     .active-slot { border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.15); }
     .turn-slot { border-color: #9933ff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.3); }
 
     .card-row { display: flex; justify-content: center; gap: 6px; min-height: 80px; margin: 10px 0; flex-wrap: wrap; }
-    .card {
-      width: 48px;
-      height: 72px;
-      background: #0f172a;
-      border: 2px solid #00ffcc;
-      border-radius: 6px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 1.1rem;
-      color: #00ffcc;
-      box-shadow: 0 0 6px rgba(0, 255, 204, 0.2);
-      animation: cardIn 0.3s ease forwards;
-    }
-
-    @keyframes cardIn {
-      0% { opacity: 0; transform: translateY(-15px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
+    .card { width: 48px; height: 72px; background: #0f172a; border: 2px solid #00ffcc; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; color: #00ffcc; box-shadow: 0 0 6px rgba(0, 255, 204, 0.2); animation: cardIn 0.3s ease forwards; }
+    @keyframes cardIn { 0% { opacity: 0; transform: translateY(-15px); } 100% { opacity: 1; transform: translateY(0); } }
     .card.back { border-color: #9933ff; color: #9933ff; background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%); }
 
-    /* 底部操作控制列 */
     .control-panel { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
     .game-btn { background: transparent; padding: 12px 30px; font-size: 1rem; font-weight: bold; font-family: inherit; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+    .btn-hit { border: 2px solid #00ffcc; color: #00ffcc; } .btn-hit:hover:not(:disabled) { background: #00ffcc; color: #0a0f1d; }
+    .btn-stand { border: 2px solid #ff0055; color: #ff0055; } .btn-stand:hover:not(:disabled) { background: #ff0055; color: #fff; }
+    .btn-restart { border: 2px solid #9933ff; color: #9933ff; } .btn-restart:hover { background: #9933ff; color: #fff; }
+    .btn-back { border: 2px solid #64748b; color: #64748b; } .btn-back:hover { background: #64748b; color: #fff; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #334155 !important; color: #334155 !important; }
 
-    .btn-hit { border: 2px solid #00ffcc; color: #00ffcc; }
-    .btn-hit:hover { background: #00ffcc; color: #0a0f1d; box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); }
-    .btn-stand { border: 2px solid #ff0055; color: #ff0055; }
-    .btn-stand:hover { background: #ff0055; color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
-
-    .btn-restart { border: 2px solid #9933ff; color: #9933ff; }
-    .btn-restart:hover { background: #9933ff; color: #fff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.4); }
-    .btn-back { border: 2px solid #64748b; color: #64748b; }
-    .btn-back:hover { background: #64748b; color: #fff; box-shadow: 0 0 15px rgba(100, 116, 139, 0.4); }
-
-    .result-tag { font-weight: bold; display: block; margin-top: 5px; font-size: 0.9rem; }
+    .result-tag { font-weight: bold; display: block; margin-top: 5px; font-size: 0.85rem; }
     .turn-indicator { color: #9933ff; font-weight: bold; font-size: 1.2rem; margin-top: 10px; text-align: center; min-height: 30px; }
+    .thinking-blink { animation: blink 0.8s infinite alternate; color: #9933ff !important; }
+    @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
   </style>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // 你的 Firebase 配置
     const firebaseConfig = {
       apiKey: "AIzaSyAR2MfRuL7Bb3OArlvL3Bv6zlZ8lRkLMbM",
       authDomain: "hihi-jack21.firebaseapp.com",
@@ -169,221 +74,94 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    window.db = db; // 暴露給全域
+    window.ref = ref;
+    window.set = set;
+    window.onValue = onValue;
+    window.update = update;
+  </script>
+</head>
+<body>
 
-    let currentRoomCode = null;
-    let myRole = null; // "P1" 或 "P2"
-    let isMyTurn = false;
-    let localRoomData = null;
+  <div class="hacker-bg"></div>
 
-    // 顯示多人連線選單
-    window.showMultiplayerMenu = function() {
-      document.getElementById("multi-menu").classList.toggle("hidden");
-    }
+  <div class="container" id="main-menu">
+    <h1 class="title">⚡ JACK 21<span class="egg">🌹</span></h1>
+    <p class="subtitle">System Status: Dual Mode Ready // Designed for Ado Fans</p>
+    
+    <div class="menu-box">
+      <button class="btn" onclick="startSingleMode()">▶ 單人模式 (人機對戰)</button>
+      <button class="btn btn-purple" onclick="toggleMultiMenu()">🌐 多人連機 (1v1 房主對決)</button>
+    </div>
+    
+    <div id="multi-menu" class="menu-box hidden">
+      <hr style="border-color:#334155; margin: 5px 0;">
+      <button class="btn btn-sub" onclick="createRoom()">[ 1. 點我創建房間・獲取代碼 ]</button>
+      <div class="input-group">
+        <input type="text" id="room-code" placeholder="輸入同學的房間代碼...">
+        <button class="btn btn-sub-join" onclick="joinRoom()">2. 進入</button>
+      </div>
+      <div id="status-display" class="status-text"></div>
+    </div>
+  </div>
 
-    // 創建房間 (P1 房東)
-    window.createRoom = function() {
-      const randomCode = "ADO-" + Math.floor(1000 + Math.random() * 9000);
-      currentRoomCode = randomCode;
-      myRole = "P1";
+  <div id="game-table" class="game-table hidden">
+    <h2 class="table-title">⚡ JACK 21 ⚡</h2>
+    
+    <div class="dealer-section">
+      <div class="avatar-container"><img class="dealer-avatar" id="host-img" src=""></div>
+      <h3>[ HOST: AI-ADO ]</h3>
+      <div id="dealer-cards" class="card-row"></div>
+      <p>目前點數: <span id="dealer-score">??</span></p>
+    </div>
 
-      const statusDisplay = document.getElementById("status-display");
-      statusDisplay.style.color = "#00ffcc";
-      statusDisplay.innerHTML = "🔑 房間創建中...";
+    <div id="turn-indicator" class="turn-indicator hidden"></div>
+    <hr class="purple-line">
 
-      // 初始化雲端房間數據
-      set(ref(db, 'rooms/' + randomCode), {
-        roomCode: randomCode,
-        status: "waiting",
-        p1Connected: true,
-        p2Connected: false,
-        deck: [],
-        dealerHand: [],
-        p1Hand: [],
-        p2Hand: [],
-        currentTurn: "P1", // P1 先操作
-        gameState: "joining", // joining, playing, finished
-        dealerReveal: false
-      }).then(() => {
-        statusDisplay.innerHTML = "🔑 房間建立成功！<br>請複製此代碼給朋友：<strong style='color:#9933ff'>" + randomCode + "</strong><br><span style='color:#e2e8f0;font-size:0.8rem;'>⏳ 等待朋友加入...</span>";
-        
-        // 開始監聽房間變化
-        listenToRoom(randomCode);
-      });
-    };
+    <div class="players-grid" id="players-container">
+      <div class="player-slot active-slot" id="slot-p1">
+        <h4 id="name-p1">YOU (P1)</h4>
+        <div id="p1-cards" class="card-row"></div>
+        <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
+      </div>
+      <div class="player-slot" id="slot-p2">
+        <h4 id="name-p2">ROBOT_02 (AI)</h4>
+        <div id="p2-cards" class="card-row"></div>
+        <p>點數: <span id="p2-score">??</span> <span id="result-p2" class="result-tag"></span></p>
+      </div>
+      <div class="player-slot" id="slot-p3">
+        <h4>ROBOT_03 (AI)</h4>
+        <div id="p3-cards" class="card-row"></div>
+        <p>點數: <span id="p3-score">??</span> <span id="result-p3" class="result-tag"></span></p>
+      </div>
+      <div class="player-slot" id="slot-p4">
+        <h4>ROBOT_04 (AI)</h4>
+        <div id="p4-cards" class="card-row"></div>
+        <p>點數: <span id="p4-score">??</span> <span id="result-p4" class="result-tag"></span></p>
+      </div>
+    </div>
 
-    // 加入房間 (P2 訪客)
-    window.joinRoom = function() {
-      const codeInput = document.getElementById("room-code").value.trim().toUpperCase();
-      const statusDisplay = document.getElementById("status-display");
-      
-      if (codeInput === "") {
-        alert("請輸入房間代碼！");
-        return;
-      }
+    <div class="control-panel">
+      <button class="game-btn btn-hit" id="hit-btn" onclick="handleHit()">⚡ 要牌 (HIT)</button>
+      <button class="game-btn btn-stand" id="stand-btn" onclick="handleStand()">🔒 停牌 (STAND)</button>
+      <button class="game-btn btn-restart hidden" id="restart-btn" onclick="handleRestart()">🔄 重開新局</button>
+      <button class="game-btn btn-back hidden" id="back-btn" onclick="backToMenu()">🏠 回主畫面</button>
+    </div>
+  </div>
 
-      statusDisplay.style.color = "#94a3b8";
-      statusDisplay.innerText = "📡 正在連線至房間 [" + codeInput + "]...";
+  <script>
+    // ================= 共用核心邏輯 =================
+    let currentMode = ""; // "single" 或 "multi"
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-      onValue(ref(db, 'rooms/' + codeInput), (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-          statusDisplay.style.color = "#ff0055";
-          statusDisplay.innerText = "❌ 找不到此房間！";
-          return;
-        }
-        
-        if (myRole === null) { // 第一次加入
-          currentRoomCode = codeInput;
-          myRole = "P2";
-          
-          update(ref(db, 'rooms/' + codeInput), {
-            p2Connected: true,
-            status: "ready"
-          }).then(() => {
-            listenToRoom(codeInput);
-          });
-        }
-      }, { onlyOnce: true });
-    };
+    function toggleMultiMenu() { document.getElementById("multi-menu").classList.toggle("hidden"); }
+    function backToMenu() { location.reload(); } // 最安全的重置方式
 
-    // 監聽房間動態與同步核心
-    function listenToRoom(roomCode) {
-      onValue(ref(db, 'rooms/' + roomCode), (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-        localRoomData = data;
-
-        // 當兩人都準備就緒，由 P1 房東負責初始化洗牌並開局
-        if (myRole === "P1" && data.status === "ready" && data.gameState === "joining") {
-          startMultiplayerGameLogic();
-          return;
-        }
-
-        // 切換到遊戲桌畫面
-        if (data.gameState === "playing" || data.gameState === "finished") {
-          document.getElementById("main-menu").classList.add("hidden");
-          document.getElementById("game-table").classList.remove("hidden");
-          
-          // 更換為 Ado 頭像
-          document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
-          
-          // 更新手牌畫面
-          updateMultiplayerUI(data);
-        }
-      });
-    }
-
-    // 房東初始化牌局
-    function startMultiplayerGameLogic() {
-      let newDeck = [];
-      const suits = ['♠', '♥', '♦', '♣'];
-      const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-      for (let suit of suits) {
-        for (let value of values) {
-          newDeck.push({ suit: suit, value: value });
-        }
-      }
-      // 洗牌
-      for (let i = newDeck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
-      }
-
-      // 莊家與雙方發兩張牌
-      const dealerHand = [newDeck.pop(), newDeck.pop()];
-      const p1Hand = [newDeck.pop(), newDeck.pop()];
-      const p2Hand = [newDeck.pop(), newDeck.pop()];
-
-      update(ref(db, 'rooms/' + currentRoomCode), {
-        deck: newDeck,
-        dealerHand: dealerHand,
-        p1Hand: p1Hand,
-        p2Hand: p2Hand,
-        currentTurn: "P1",
-        gameState: "playing",
-        dealerReveal: false
-      });
-    }
-
-    // 同步刷新多人畫面
-    function updateMultiplayerUI(data) {
-      // 判斷當前輪到誰
-      isMyTurn = (data.currentTurn === myRole && data.gameState === "playing");
-      
-      const turnIndicator = document.getElementById("turn-indicator");
-      if (data.gameState === "playing") {
-        turnIndicator.innerText = isMyTurn ? "⚡ 輪到你了！請選擇要牌或停牌" : `⏳ 等待玩家 (${data.currentTurn}) 操作中...`;
-        document.getElementById("hit-btn").classList.remove("hidden");
-        document.getElementById("stand-btn").classList.remove("hidden");
-        document.getElementById("restart-btn").classList.add("hidden");
-      } else {
-        turnIndicator.innerText = "🏁 遊戲結束，結算點數！";
-        document.getElementById("hit-btn").classList.add("hidden");
-        document.getElementById("stand-btn").classList.add("hidden");
-        // 只有房東 P1 可以點重開
-        if (myRole === "P1") {
-          document.getElementById("restart-btn").classList.remove("hidden");
-        }
-      }
-
-      // 控制按鈕點擊狀態
-      document.getElementById("hit-btn").disabled = !isMyTurn;
-      document.getElementById("stand-btn").disabled = !isMyTurn;
-
-      // 渲染玩家 1 區域
-      renderZone("p1-cards", "p1-score", data.p1Hand, false);
-      document.getElementById("slot-p1").className = "player-slot" + (data.currentTurn === "P1" ? " turn-slot" : "") + (myRole === "P1" ? " active-slot" : "");
-      
-      // 渲染玩家 2 區域
-      renderZone("p2-cards", "p2-score", data.p2Hand, false);
-      document.getElementById("slot-p2").className = "player-slot" + (data.currentTurn === "P2" ? " turn-slot" : "") + (myRole === "P2" ? " active-slot" : "");
-
-      // 渲染莊家 AI-ADO 區域
-      const dealerCardsDiv = document.getElementById("dealer-cards");
-      const dealerScoreEl = document.getElementById("dealer-score");
-      dealerCardsDiv.innerHTML = "";
-      
-      if (!data.dealerReveal) {
-        if (data.dealerHand && data.dealerHand[0]) {
-          dealerCardsDiv.appendChild(createCardEl(data.dealerHand[0]));
-          for(let i=1; i<data.dealerHand.length; i++) dealerCardsDiv.appendChild(createBackCardEl());
-        }
-        dealerScoreEl.innerText = "??";
-      } else {
-        if (data.dealerHand) {
-          data.dealerHand.forEach(card => dealerCardsDiv.appendChild(createCardEl(card)));
-          dealerScoreEl.innerText = calcScore(data.dealerHand);
-        }
-        // 如果結算了，顯示最終贏家
-        judgeMultiplayerWinners(data);
-      }
-    }
-
-    function renderZone(divId, scoreId, hand, isHidden) {
-      const div = document.getElementById(divId);
-      const scoreEl = document.getElementById(scoreId);
-      if (!div || !scoreEl) return;
-      div.innerHTML = "";
-      if (!hand) return;
-
-      hand.forEach(card => div.appendChild(createCardEl(card)));
-      scoreEl.innerText = calcScore(hand);
-    }
-
-    function createCardEl(card) {
-      const el = document.createElement("div");
-      el.className = "card";
-      if (card.suit === '♥' || card.suit === '♦') {
-        el.style.color = "#ff0055"; el.style.borderColor = "#ff0055";
-      }
-      el.innerText = `${card.suit} ${card.value}`;
-      return el;
-    }
-
-    function createBackCardEl() {
-      const el = document.createElement("div");
-      el.className = "card back"; el.innerText = "⚡";
-      return el;
+    function createDeck() {
+      const suits = ['♠', '♥', '♦', '♣']; const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+      let d = []; suits.forEach(s => values.forEach(v => d.push({ suit: s, value: v })));
+      for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+      return d;
     }
 
     function calcScore(hand) {
@@ -398,188 +176,242 @@
       return score;
     }
 
-    // 多人要牌動作
-    window.hitCard = function() {
-      if (!isMyTurn || !localRoomData) return;
-      
-      let currentHand = myRole === "P1" ? [...localRoomData.p1Hand] : [...localRoomData.p2Hand];
-      let currentDeck = [...localRoomData.deck];
-      
-      const newCard = currentDeck.pop();
-      currentHand.push(newCard);
-
-      let updates = { deck: currentDeck };
-      if (myRole === "P1") updates.p1Hand = currentHand;
-      else updates.p2Hand = currentHand;
-
-      // 如果要牌後爆牌了，直接強制停牌
-      if (calcScore(currentHand) > 21) {
-        alert("💥 爆牌了！");
-        if (myRole === "P1") {
-          updates.currentTurn = "P2"; // 輪到 P2
-        } else {
-          updates.currentTurn = "dealer";
-          // 如果 P2 爆牌且是最後一棒，直接交給莊家補牌結算
-          setTimeout(() => { dealerAiTurn(); }, 500);
-        }
-      }
-
-      update(ref(db, 'rooms/' + currentRoomCode), updates);
-    };
-
-    // 多人停牌動作
-    window.standGame = function() {
-      if (!isMyTurn || !localRoomData) return;
-
-      let updates = {};
-      if (myRole === "P1") {
-        updates.currentTurn = "P2"; // P1 結束，換 P2
-        update(ref(db, 'rooms/' + currentRoomCode), updates);
-      } else {
-        updates.currentTurn = "dealer"; // P2 結束，換莊家
-        update(ref(db, 'rooms/' + currentRoomCode), updates).then(() => {
-          dealerAiTurn();
-        });
-      }
-    };
-
-    // 莊家補牌自動化邏輯 (由 P2 結束時觸發，並寫回雲端)
-    function dealerAiTurn() {
-      onValue(ref(db, 'rooms/' + currentRoomCode), (snapshot) => {
-        const data = snapshot.val();
-        if (!data || data.currentTurn !== "dealer") return;
-
-        let dealerHand = [...data.dealerHand];
-        let deck = [...data.deck];
-
-        // 莊家低於 17 点必須補牌
-        while (calcScore(dealerHand) < 17) {
-          dealerHand.push(deck.pop());
-        }
-
-        update(ref(db, 'rooms/' + currentRoomCode), {
-          dealerHand: dealerHand,
-          deck: deck,
-          currentTurn: "end",
-          gameState: "finished",
-          dealerReveal: true
-        });
-      }, { onlyOnce: true });
+    function renderCard(card) {
+      const el = document.createElement("div"); el.className = "card";
+      if (card.suit === '♥' || card.suit === '♦') { el.style.color = "#ff0055"; el.style.borderColor = "#ff0055"; }
+      el.innerText = `${card.suit} ${card.value}`; return el;
+    }
+    function renderBackCard() {
+      const el = document.createElement("div"); el.className = "card back"; el.innerText = "⚡"; return el;
+    }
+    function updateZone(divId, scoreId, hand, isHidden) {
+      const div = document.getElementById(divId); const scoreEl = document.getElementById(scoreId);
+      if (!div || !scoreEl) return;
+      div.innerHTML = "";
+      if (!hand) return;
+      if (isHidden) { hand.forEach(() => div.appendChild(renderBackCard())); scoreEl.innerText = "??"; }
+      else { hand.forEach(c => div.appendChild(renderCard(c))); scoreEl.innerText = calcScore(hand); }
     }
 
-    // 判斷輸贏並彈出迷因對話框
-    function judgeMultiplayerWinners(data) {
-      const dScore = calcScore(data.dealerHand);
-      const p1Score = calcScore(data.p1Hand);
-      const p2Score = calcScore(data.p2Hand);
+    function handleHit() { if (currentMode === "single") singleHit(); else multiHit(); }
+    function handleStand() { if (currentMode === "single") singleStand(); else multiStand(); }
+    function handleRestart() { if (currentMode === "single") initSingleGame(); else multiRestart(); }
 
-      const r1 = document.getElementById("result-p1");
-      const r2 = document.getElementById("result-p2");
+    // ================= 單人模式邏輯 =================
+    let sDeck = [], sDealer = [], sP1 = [], sP2 = [], sP3 = [], sP4 = [], sReveal = false;
+
+    function startSingleMode() {
+      currentMode = "single";
+      document.getElementById("main-menu").classList.add("hidden");
+      document.getElementById("game-table").classList.remove("hidden");
+      document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
+      document.getElementById("turn-indicator").classList.add("hidden");
       
-      // P1 判定
-      if (p1Score > 21) { r1.innerText = "💥 爆牌 BUST"; r1.style.color = "#ff0055"; }
-      else if (dScore > 21 || p1Score > dScore) { r1.innerText = "🏆 獲勝 WIN"; r1.style.color = "#00ffcc"; }
-      else if (p1Score < dScore) { r1.innerText = "❌ 戰敗 LOSE"; r1.style.color = "#888"; }
-      else { r1.innerText = "🔒 平局 PUSH"; r1.style.color = "#9933ff"; }
-
-      // P2 判定
-      if (p2Score > 21) { r2.innerText = "💥 爆牌 BUST"; r2.style.color = "#ff0055"; }
-      else if (dScore > 21 || p2Score > dScore) { r2.innerText = "🏆 獲勝 WIN"; r2.style.color = "#00ffcc"; }
-      else if (p2Score < dScore) { r2.innerText = "❌ 戰敗 LOSE"; r2.style.color = "#888"; }
-      else { r2.innerText = "🔒 平局 PUSH"; r2.style.color = "#9933ff"; }
-
-      // 每個人在自己螢幕看見自己的迷因彈窗
-      myTimeoutAlert(myRole === "P1" ? p1Score : p2Score, dScore);
+      // 確保顯示所有槽位並改名
+      document.getElementById("slot-p3").style.display = "block";
+      document.getElementById("slot-p4").style.display = "block";
+      document.getElementById("name-p1").innerText = "YOU (P1)";
+      document.getElementById("name-p2").innerText = "ROBOT_02 (AI)";
+      
+      initSingleGame();
     }
 
-    let alertTriggered = false;
-    function myTimeoutAlert(myScore, dScore) {
-      if (alertTriggered) return;
-      alertTriggered = true;
+    function initSingleGame() {
+      sDeck = createDeck(); sReveal = false;
+      sDealer = [sDeck.pop(), sDeck.pop()]; sP1 = [sDeck.pop(), sDeck.pop()];
+      sP2 = [sDeck.pop(), sDeck.pop()]; sP3 = [sDeck.pop(), sDeck.pop()]; sP4 = [sDeck.pop(), sDeck.pop()];
       
+      document.getElementById("hit-btn").classList.remove("hidden");
+      document.getElementById("stand-btn").classList.remove("hidden");
+      document.getElementById("restart-btn").classList.add("hidden");
+      document.getElementById("back-btn").classList.add("hidden");
+
+      for (let i = 1; i <= 4; i++) {
+        let tag = document.getElementById("result-p" + i); if(tag) { tag.innerText = ""; tag.className = "result-tag"; }
+        document.getElementById("slot-p" + i).style.borderColor = (i===1) ? "#00ffcc" : "#334155";
+      }
+      updateSingleUI();
+    }
+
+    function updateSingleUI() {
+      updateZone("p1-cards", "p1-score", sP1, false);
+      updateZone("p2-cards", "p2-score", sP2, !sReveal);
+      updateZone("p3-cards", "p3-score", sP3, !sReveal);
+      updateZone("p4-cards", "p4-score", sP4, !sReveal);
+      updateZone("dealer-cards", "dealer-score", sDealer, !sReveal);
+      if(!sReveal && sDealer.length>0) {
+        const dDiv = document.getElementById("dealer-cards");
+        dDiv.innerHTML = ""; dDiv.appendChild(renderCard(sDealer[0])); dDiv.appendChild(renderBackCard());
+      }
+    }
+
+    function singleHit() {
+      sP1.push(sDeck.pop()); updateSingleUI();
+      if (calcScore(sP1) > 21) { setTimeout(() => { alert("💥 你爆牌了！"); singleStand(); }, 300); }
+    }
+
+    async function singleStand() {
+      document.getElementById("hit-btn").classList.add("hidden"); document.getElementById("stand-btn").classList.add("hidden");
+      await robotTurn("p2", sP2); await robotTurn("p3", sP3); await robotTurn("p4", sP4);
+      
+      const dScoreEl = document.getElementById("dealer-score");
+      while (calcScore(sDealer) < 17) {
+        dScoreEl.innerHTML = "<span class='thinking-blink'>⏳ 莊家補牌...</span>";
+        await sleep(1000); sDealer.push(sDeck.pop()); updateSingleUI();
+      }
+      sReveal = true; updateSingleUI(); judgeSingle();
+      document.getElementById("restart-btn").classList.remove("hidden"); document.getElementById("back-btn").classList.remove("hidden");
+    }
+
+    async function robotTurn(id, hand) {
+      const tag = document.getElementById("result-" + id); const slot = document.getElementById("slot-" + id);
+      slot.style.borderColor = "#9933ff"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 思考中...";
+      await sleep(1000);
+      while (calcScore(hand) < 17) { tag.innerText = "⚡ 要牌..."; await sleep(800); hand.push(sDeck.pop()); updateSingleUI(); }
+      tag.className = "result-tag"; tag.style.color = "#9933ff"; tag.innerText = "🔒 停牌"; slot.style.borderColor = "#334155"; await sleep(400);
+    }
+
+    function judgeSingle() {
+      const dScore = calcScore(sDealer);
+      const ps = [{id:"p1", h:sP1}, {id:"p2", h:sP2}, {id:"p3", h:sP3}, {id:"p4", h:sP4}];
+      ps.forEach(p => {
+        const s = calcScore(p.h); const tag = document.getElementById("result-"+p.id); const slot = document.getElementById("slot-"+p.id);
+        if (s>21) { tag.innerText = "【💥 爆牌】"; tag.style.color="#ff0055"; slot.style.borderColor="#ff0055"; }
+        else if (dScore>21 || s>dScore) { tag.innerText = "【🏆 獲勝】"; tag.style.color="#00ffcc"; slot.style.borderColor="#00ffcc"; }
+        else if (s<dScore) { tag.innerText = "【❌ 戰敗】"; tag.style.color="#888"; }
+        else { tag.innerText = "【🔒 平局】"; tag.style.color="#9933ff"; }
+      });
       setTimeout(() => {
-        if (myScore > 21) alert("菜就多練👎");
-        else if (dScore > 21) alert("🎉 莊家爆牌！你贏了！");
-        else if (myScore > dScore) alert("👑 最終點數勝過莊家！你成功破解了 Ado 的防禦！");
-        else if (myScore < dScore) alert("你沒急吧🤡");
-        else alert("🔒 平手！");
-      }, 600);
+        let p1s = calcScore(sP1);
+        if(p1s>21) alert("菜就多練👎"); else if(dScore>21) alert("莊家爆牌！你贏了！"); else if(p1s>dScore) alert("成功打敗AI！"); else if(p1s<dScore) alert("你沒急吧🤡"); else alert("平手！");
+      }, 500);
     }
 
-    // 房東重開牌局
-    window.restartMultiplayerGame = function() {
-      alertTriggered = false;
-      update(ref(db, 'rooms/' + currentRoomCode), {
-        status: "ready",
-        gameState: "joining"
+    // ================= 多人模式邏輯 (Firebase) =================
+    let mRoomCode = null, mRole = null, mData = null;
+
+    window.createRoom = function() {
+      mRoomCode = "ADO-" + Math.floor(1000 + Math.random() * 9000); mRole = "P1";
+      const status = document.getElementById("status-display"); status.style.color = "#00ffcc"; status.innerHTML = "🔑 房間創建中... (如果卡住請檢查 Firebase 規則)";
+      
+      window.set(window.ref(window.db, 'rooms/' + mRoomCode), {
+        status: "waiting", p1Connected: true, p2Connected: false, currentTurn: "P1", gameState: "joining", dealerReveal: false
+      }).then(() => {
+        status.innerHTML = `🔑 創建成功！代碼：<strong style='color:#9933ff'>${mRoomCode}</strong><br>⏳ 等待朋友加入...`;
+        listenRoom(mRoomCode);
+      });
+    };
+
+    window.joinRoom = function() {
+      const code = document.getElementById("room-code").value.trim().toUpperCase();
+      const status = document.getElementById("status-display");
+      if(code==="") return alert("請輸入代碼");
+      status.innerText = "📡 搜尋中...";
+      
+      window.onValue(window.ref(window.db, 'rooms/' + code), (snap) => {
+        if(!snap.val()) { status.style.color = "#ff0055"; status.innerText = "❌ 找不到房間"; return; }
+        if(mRole === null) {
+          mRoomCode = code; mRole = "P2";
+          window.update(window.ref(window.db, 'rooms/' + code), { p2Connected: true, status: "ready" }).then(() => listenRoom(code));
+        }
+      }, { onlyOnce: true });
+    };
+
+    function listenRoom(code) {
+      window.onValue(window.ref(window.db, 'rooms/' + code), (snap) => {
+        mData = snap.val(); if(!mData) return;
+        if(mRole === "P1" && mData.status === "ready" && mData.gameState === "joining") {
+          let nd = createDeck();
+          window.update(window.ref(window.db, 'rooms/' + code), { deck: nd, dealerHand: [nd.pop(),nd.pop()], p1Hand: [nd.pop(),nd.pop()], p2Hand: [nd.pop(),nd.pop()], gameState: "playing", currentTurn: "P1", dealerReveal: false });
+        }
+        if(mData.gameState === "playing" || mData.gameState === "finished") startMultiModeUI();
       });
     }
 
-    // 單人模式保留
-    window.startSinglePlayer = function() {
-      alert("單人模式已停用，請直接邀請同學使用「多人連機」功能！");
+    function startMultiModeUI() {
+      currentMode = "multi";
+      document.getElementById("main-menu").classList.add("hidden"); document.getElementById("game-table").classList.remove("hidden");
+      document.getElementById("turn-indicator").classList.remove("hidden");
+      document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
+      
+      // 隱藏P3,P4, 改名P1,P2
+      document.getElementById("slot-p3").style.display = "none"; document.getElementById("slot-p4").style.display = "none";
+      document.getElementById("name-p1").innerText = "PLAYER 1 (房主)"; document.getElementById("name-p2").innerText = "PLAYER 2 (朋友)";
+      
+      let isMyTurn = (mData.currentTurn === mRole && mData.gameState === "playing");
+      let turnTxt = document.getElementById("turn-indicator");
+      if (mData.gameState === "playing") {
+        turnTxt.innerText = isMyTurn ? "⚡ 輪到你了！" : `⏳ 等待 ${mData.currentTurn} 操作...`;
+        document.getElementById("hit-btn").classList.remove("hidden"); document.getElementById("stand-btn").classList.remove("hidden"); document.getElementById("restart-btn").classList.add("hidden"); document.getElementById("back-btn").classList.add("hidden");
+      } else {
+        turnTxt.innerText = "🏁 結算！";
+        document.getElementById("hit-btn").classList.add("hidden"); document.getElementById("stand-btn").classList.add("hidden");
+        if(mRole === "P1") document.getElementById("restart-btn").classList.remove("hidden");
+        document.getElementById("back-btn").classList.remove("hidden");
+      }
+      document.getElementById("hit-btn").disabled = !isMyTurn; document.getElementById("stand-btn").disabled = !isMyTurn;
+
+      updateZone("p1-cards", "p1-score", mData.p1Hand, false); document.getElementById("slot-p1").className = "player-slot" + (mData.currentTurn==="P1"?" turn-slot":"") + (mRole==="P1"?" active-slot":"");
+      updateZone("p2-cards", "p2-score", mData.p2Hand, false); document.getElementById("slot-p2").className = "player-slot" + (mData.currentTurn==="P2"?" turn-slot":"") + (mRole==="P2"?" active-slot":"");
+      
+      updateZone("dealer-cards", "dealer-score", mData.dealerHand, !mData.dealerReveal);
+      if(!mData.dealerReveal && mData.dealerHand) {
+        const dDiv = document.getElementById("dealer-cards"); dDiv.innerHTML = ""; dDiv.appendChild(renderCard(mData.dealerHand[0])); dDiv.appendChild(renderBackCard());
+      }
+      
+      if(mData.gameState === "finished") judgeMulti();
+    }
+
+    function multiHit() {
+      let hand = mRole === "P1" ? [...mData.p1Hand] : [...mData.p2Hand]; let d = [...mData.deck];
+      hand.push(d.pop());
+      let updates = { deck: d };
+      if(mRole === "P1") updates.p1Hand = hand; else updates.p2Hand = hand;
+      
+      if(calcScore(hand) > 21) {
+        if(mRole === "P1") updates.currentTurn = "P2"; else { updates.currentTurn = "dealer"; setTimeout(() => multiDealerTurn(), 500); }
+      }
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), updates);
+    }
+
+    function multiStand() {
+      let updates = { currentTurn: mRole === "P1" ? "P2" : "dealer" };
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), updates).then(() => { if(mRole === "P2") multiDealerTurn(); });
+    }
+
+    function multiDealerTurn() {
+      window.onValue(window.ref(window.db, 'rooms/' + mRoomCode), (snap) => {
+        let d = snap.val(); if(d.currentTurn !== "dealer") return;
+        let dh = [...d.dealerHand]; let dk = [...d.deck];
+        while(calcScore(dh) < 17) dh.push(dk.pop());
+        window.update(window.ref(window.db, 'rooms/' + mRoomCode), { dealerHand: dh, deck: dk, currentTurn: "end", gameState: "finished", dealerReveal: true });
+      }, { onlyOnce: true });
+    }
+
+    let mAlerted = false;
+    function judgeMulti() {
+      const ds = calcScore(mData.dealerHand); const p1s = calcScore(mData.p1Hand); const p2s = calcScore(mData.p2Hand);
+      function setTag(id, s) {
+        let t = document.getElementById("result-"+id); let el = document.getElementById("slot-"+id);
+        if(s>21) { t.innerText="【💥 爆牌】"; t.style.color="#ff0055"; el.style.borderColor="#ff0055"; }
+        else if(ds>21 || s>ds) { t.innerText="【🏆 獲勝】"; t.style.color="#00ffcc"; el.style.borderColor="#00ffcc"; }
+        else if(s<ds) { t.innerText="【❌ 戰敗】"; t.style.color="#888"; el.style.borderColor="#334155"; }
+        else { t.innerText="【🔒 平局】"; t.style.color="#9933ff"; el.style.borderColor="#9933ff"; }
+      }
+      setTag("p1", p1s); setTag("p2", p2s);
+      
+      if(!mAlerted) {
+        mAlerted = true; let ms = mRole==="P1"?p1s:p2s;
+        setTimeout(() => {
+          if(ms>21) alert("菜就多練👎"); else if(ds>21) alert("莊家爆牌！你贏了！"); else if(ms>ds) alert("打敗ADO防禦！"); else if(ms<ds) alert("你沒急吧🤡"); else alert("平手！");
+        }, 600);
+      }
+    }
+
+    function multiRestart() {
+      mAlerted = false; document.getElementById("result-p1").innerText = ""; document.getElementById("result-p2").innerText = "";
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { status: "ready", gameState: "joining" });
     }
   </script>
-</head>
-<body>
-
-  <div class="hacker-bg"></div>
-
-  <div class="container" id="main-menu">
-    <h1 class="title">⚡ JACK 21<span class="egg">🌹</span></h1>
-    <p class="subtitle">System Status: Multiplayer Ready // Sync via Firebase</p>
-    
-    <div class="menu-box">
-      <button class="btn btn-purple" onclick="showMultiplayerMenu()">🌐 啟動多人真連機模式</button>
-    </div>
-    
-    <div id="multi-menu" class="menu-box hidden">
-      <hr style="border-color:#334155;">
-      <button class="btn btn-sub" onclick="createRoom()">[ 1. 點我創建房間・獲取代碼 ]</button>
-      <div class="input-group">
-        <input type="text" id="room-code" placeholder="輸入同學的房間代碼...">
-        <button class="btn btn-sub-join" onclick="joinRoom()">2. 進入房間</button>
-      </div>
-      <div id="status-display" class="status-text"></div>
-    </div>
-  </div>
-
-  <div id="game-table" class="game-table hidden">
-    <h2 class="table-title">⚡ JACK 21 ⚡</h2>
-    
-    <div class="dealer-section">
-      <div class="avatar-container">
-        <img class="dealer-avatar" src="" alt="AI Host" id="host-img">
-      </div>
-      <h3>[ HOST: AI-ADO ]</h3>
-      <div id="dealer-cards" class="card-row"></div>
-      <p>目前點數: <span id="dealer-score">??</span></p>
-    </div>
-
-    <div id="turn-indicator" class="turn-indicator">⏳ 等待連線同步中...</div>
-
-    <hr class="purple-line">
-
-    <div class="players-grid">
-      <div class="player-slot" id="slot-p1">
-        <h4>PLAYER_01 (房東)</h4>
-        <div id="p1-cards" class="card-row"></div>
-        <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
-      </div>
-
-      <div class="player-slot" id="slot-p2">
-        <h4>PLAYER_02 (訪客)</h4>
-        <div id="p2-cards" class="card-row"></div>
-        <p>點數: <span id="p2-score">0</span> <span id="result-p2" class="result-tag"></span></p>
-      </div>
-    </div>
-
-    <div class="control-panel">
-      <button class="game-btn btn-hit" id="hit-btn" onclick="hitCard()">⚡ 要牌 (HIT)</button>
-      <button class="game-btn btn-stand" id="stand-btn" onclick="standGame()">🔒 停牌 (STAND)</button>
-      <button class="game-btn btn-restart hidden" id="restart-btn" onclick="restartMultiplayerGame()">🔄 再來一局 (房東專用)</button>
-    </div>
-  </div>
-
 </body>
 </html>
