@@ -223,7 +223,7 @@
       
       document.getElementById("slot-dealer").className = "dealer-section turn-slot";
       sReveal = true; updateSingleUI();
-      document.getElementById("dealer-score").innerHTML = "<span class='thinking-blink'>⏳ 莊家 AI-ADO 正在深思 (4-10秒)...</span>";
+      document.getElementById("dealer-score").innerHTML = "<span class='thinking-blink'>⏳ 莊家 ADO 正在深思...</span>";
       await sleep(getThinkingTime());
 
       while (calcScore(sDealer) < 17) { 
@@ -238,7 +238,7 @@
     
     async function runAiRobot(idx, hand) {
       const tag = document.getElementById(`result-p${idx+1}`); const slot = document.getElementById(`slot-p${idx+1}`);
-      slot.className = "player-slot turn-slot"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 計算賠率中 (4-10秒)..."; 
+      slot.className = "player-slot turn-slot"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 計算賠率中..."; 
       
       await sleep(getThinkingTime());
       
@@ -352,7 +352,7 @@
       while(calcScore(p4) < 17) p4.push(dk.pop());
       await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { p4Hand: p4, deck: dk });
 
-      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: "HOST: AI-ADO (莊家考量中)" });
+      await window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: "HOST: ADO (莊家考量中)" });
       await sleep(getThinkingTime());
       while(calcScore(dh) < 17) dh.push(dk.pop());
       
@@ -378,7 +378,7 @@
         setTimeout(() => {
           if(myS > 21) alert("菜就多練👎"); 
           else if(dS > 21) alert("🎉 莊家爆牌！你贏了！"); 
-          else if(myS > dS) alert("👑 最終打敗了 AI-ADO！"); 
+          else if(myS > dS) alert("👑 成功打敗了 ADO！"); 
           else if(myS < dS) alert("你沒急吧🤡"); 
           else alert("🔒 平手！");
         }, 600);
