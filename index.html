@@ -77,7 +77,7 @@
     <p class="subtitle">System Status: Ready to Play // Designed for Ado Fans</p>
     <div class="menu-box">
       <button class="btn" onclick="startSingleMode()">▶ 單人模式 (人機對戰)</button>
-      <button class="btn btn-purple" onclick="toggleMultiMenu()">🌐 多人連機 (也就2人)</button>
+      <button class="btn btn-purple" onclick="toggleMultiMenu()">🌐 多人連機 (也就2人XD)</button>
     </div>
     <div id="multi-menu" class="menu-box hidden">
       <hr style="border-color:#334155; margin: 10px 0;">
@@ -102,12 +102,12 @@
     <hr class="purple-line">
     <div class="players-grid" id="players-container">
       <div class="player-slot active-slot" id="slot-p1">
-        <h4 id="name-p1">YOU (P1)</h4>
+        <h4 id="name-p1" style="color: #00ffcc;">PLAYER_01</h4>
         <div id="p1-cards" class="card-row"></div>
         <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
       </div>
       <div class="player-slot" id="slot-p2">
-        <h4 id="name-p2">ROBOT_02 (AI)</h4>
+        <h4 id="name-p2" style="color: #00ffcc;">PLAYER_02</h4>
         <div id="p2-cards" class="card-row"></div>
         <p>點數: <span id="p2-score">??</span> <span id="result-p2" class="result-tag"></span></p>
       </div>
@@ -147,7 +147,7 @@
     }
 
     function calcScore(hand) {
-      if (!hand) return 0;
+      if (!hand || hand.length === 0) return 0;
       let score = 0, hasAce = false;
       for (let card of hand) {
         if (['J', 'Q', 'K'].includes(card.value)) score += 10;
@@ -168,6 +168,7 @@
     function updateSlotUI(pIdx, hand, isHidden) {
       const div = document.getElementById(`p${pIdx+1}-cards`); const scoreEl = document.getElementById(`p${pIdx+1}-score`);
       if (!div || !scoreEl) return; div.innerHTML = "";
+      if (!hand || hand.length === 0) { scoreEl.innerText = "0"; return; }
       if (isHidden) { hand.forEach(() => div.appendChild(renderBackCard())); scoreEl.innerText = "??"; }
       else { hand.forEach(c => div.appendChild(renderCard(c))); scoreEl.innerText = calcScore(hand); }
     }
@@ -179,11 +180,15 @@
     // ================= 單人模式邏輯 =================
     function startSingleMode() {
       currentMode = "single"; document.getElementById("main-menu").classList.add("hidden"); document.getElementById("game-table").classList.remove("hidden");
-      document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
-      document.getElementById("name-p2").innerText = "ROBOT_02 (AI)"; document.getElementById("name-p3").innerText = "ROBOT_03 (AI)";
+      document.getElementById("host-img").src = "https://i.scdn.co/image/ab6761610000e5ebc18a2b535780a400cc0cb1fb";
+      document.getElementById("name-p1").innerText = "YOU (你)"; 
+      document.getElementById("name-p2").innerText = "ROBOT_02 (AI)"; 
+      document.getElementById("name-p3").innerText = "ROBOT_03 (AI)";
       initSingleGame();
     }
+    
     function initSingleGame() {
+      mAlerted = false; 
       sDeck = createFullDeck(); sReveal = false; sDealer = [sDeck.pop(), sDeck.pop()];
       for(let i=0; i<4; i++) sHands[i] = [sDeck.pop(), sDeck.pop()];
       document.getElementById("hit-btn").classList.remove("hidden"); document.getElementById("stand-btn").classList.remove("hidden");
@@ -194,6 +199,7 @@
       }
       updateSingleUI();
     }
+    
     function updateSingleUI() {
       updateSlotUI(0, sHands[0], false); for(let i=1; i<4; i++) updateSlotUI(i, sHands[i], !sReveal);
       const dDiv = document.getElementById("dealer-cards"); const dScore = document.getElementById("dealer-score");
@@ -201,7 +207,12 @@
       if(!sReveal) { dDiv.appendChild(renderCard(sDealer[0])); dDiv.appendChild(renderBackCard()); dScore.innerText = "??"; }
       else { sDealer.forEach(c => dDiv.appendChild(renderCard(c))); dScore.innerText = calcScore(sDealer); }
     }
-    function singleHit() { sHands[0].push(sDeck.pop()); updateSingleUI(); if (calcScore(sHands[0]) > 21) { setTimeout(() => { alert("💥 ERROR: 你爆牌了！"); singleStand(); }, 300); } }
+    
+    function singleHit() { 
+      sHands[0].push(sDeck.pop()); updateSingleUI(); 
+      if (calcScore(sHands[0]) > 21) { setTimeout(() => { alert("💥 你爆牌了！"); singleStand(); }, 300); } 
+    }
+    
     async function singleStand() {
       document.getElementById("hit-btn").classList.add("hidden"); document.getElementById("stand-btn").classList.add("hidden");
       for(let i=1; i<4; i++) await runAiRobot(i, sHands[i]);
@@ -210,6 +221,7 @@
       judgeFinalResult(sHands[0], sHands[1], sHands[2], sHands[3], sDealer);
       document.getElementById("restart-btn").classList.remove("hidden"); document.getElementById("back-btn").classList.remove("hidden");
     }
+    
     async function runAiRobot(idx, hand) {
       const tag = document.getElementById(`result-p${idx+1}`); const slot = document.getElementById(`slot-p${idx+1}`);
       slot.className = "player-slot turn-slot"; tag.className = "result-tag thinking-blink"; tag.innerText = "💬 思考中..."; await sleep(1000);
@@ -225,6 +237,7 @@
         status.innerHTML = `🔑 房號：<strong style='color:#9933ff'>${mRoomCode}</strong><br>⏳ 等待朋友加入...`; listenRoom(mRoomCode);
       });
     };
+    
     window.joinRoom = function() {
       const code = document.getElementById("room-code").value.trim().toUpperCase();
       if(code === "") return alert("請輸入房號");
@@ -234,54 +247,84 @@
         if(mRole === null) { mRoomCode = code; mRole = "P2"; window.update(window.ref(window.db, 'rooms/' + code), { p2Connected: true, status: "ready" }).then(() => listenRoom(code)); }
       }, { onlyOnce: true });
     };
+
     function listenRoom(code) {
       window.onValue(window.ref(window.db, 'rooms/' + code), (snap) => {
         mData = snap.val(); if(!mData) return;
+        
         if(mRole === "P1" && mData.status === "ready" && mData.gameState === "joining") {
           let d = createFullDeck();
           window.update(window.ref(window.db, 'rooms/' + code), { deck: d, dealerHand: [d.pop(), d.pop()], p1Hand: [d.pop(), d.pop()], p2Hand: [d.pop(), d.pop()], p3Hand: [d.pop(), d.pop()], p4Hand: [d.pop(), d.pop()], gameState: "playing", currentTurn: "P1" });
         }
-        if(mData.gameState === "playing" || mData.gameState === "finished") startMultiModeUI();
+        
+        if(mData.gameState === "playing" || mData.gameState === "finished") {
+          startMultiModeUI();
+          if(mData.gameState === "playing" && mData.currentTurn === "AI" && mRole === "P2") {
+            if (!window.aiTriggered) { window.aiTriggered = true; setTimeout(() => runMultiAiSequence(), 800); }
+          }
+        }
       });
     }
+
     function startMultiModeUI() {
       currentMode = "multi"; document.getElementById("main-menu").classList.add("hidden"); document.getElementById("game-table").classList.remove("hidden");
-      document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
-      document.getElementById("name-p1").innerText = "PLAYER_01 (房主)"; document.getElementById("name-p2").innerText = "PLAYER_02 (訪客)";
+      document.getElementById("host-img").src = "https://i.scdn.co/image/ab6761610000e5ebc18a2b535780a400cc0cb1fb";
+      
+      if (mData.gameState === "playing") { mAlerted = false; window.aiTriggered = false; }
+
+      document.getElementById("name-p1").innerText = mRole === "P1" ? "PLAYER_01 (你)" : "PLAYER_01 (朋友)";
+      document.getElementById("name-p2").innerText = mRole === "P2" ? "PLAYER_02 (你)" : "PLAYER_02 (朋友)";
       document.getElementById("turn-indicator").classList.remove("hidden");
+      
       let isMyTurn = (mData.currentTurn === mRole && mData.gameState === "playing");
       document.getElementById("turn-indicator").innerText = isMyTurn ? "⚡ 輪到你了！" : (mData.gameState === "playing" ? `⏳ 等待 ${mData.currentTurn} 操作...` : "🏁 結算中...");
       document.getElementById("hit-btn").disabled = !isMyTurn; document.getElementById("stand-btn").disabled = !isMyTurn;
-      updateSlotUI(0, mData.p1Hand, false); updateSlotUI(1, mData.p2Hand, false);
-      updateSlotUI(2, mData.p3Hand, !mData.dealerReveal); updateSlotUI(3, mData.p4Hand, !mData.dealerReveal);
+      
+      // 🔮 關鍵修改：對戰進行中時，隱藏對方的卡牌（第三個參數傳入是否要隱藏）
+      // 如果遊戲結束了(finished)，全部掀開。否則，如果你是P1就隱藏P2，你是P2就隱藏P1。
+      let hideP1 = (mData.gameState !== "finished" && mRole !== "P1");
+      let hideP2 = (mData.gameState !== "finished" && mRole !== "P2");
+      let hideBots = (mData.gameState !== "finished"); // 機器人在遊戲結束前也保持神祕
+
+      updateSlotUI(0, mData.p1Hand, hideP1); 
+      updateSlotUI(1, mData.p2Hand, hideP2);
+      updateSlotUI(2, mData.p3Hand, hideBots); 
+      updateSlotUI(3, mData.p4Hand, hideBots);
+      
       const dDiv = document.getElementById("dealer-cards"); const dScore = document.getElementById("dealer-score"); dDiv.innerHTML = "";
       if(!mData.dealerReveal) { dDiv.appendChild(renderCard(mData.dealerHand[0])); dDiv.appendChild(renderBackCard()); dScore.innerText = "??"; }
       else { mData.dealerHand.forEach(c => dDiv.appendChild(renderCard(c))); dScore.innerText = calcScore(mData.dealerHand); }
+      
       if(mData.gameState === "finished") judgeFinalResult(mData.p1Hand, mData.p2Hand, mData.p3Hand, mData.p4Hand, mData.dealerHand);
       document.getElementById("restart-btn").classList.toggle("hidden", mData.gameState !== "finished" || mRole !== "P1");
       document.getElementById("back-btn").classList.toggle("hidden", mData.gameState !== "finished");
     }
+
     function multiHit() {
-      let hand = mRole === "P1" ? [...mData.p1Hand] : [...mData.p2Hand]; let d = [...mData.deck]; hand.push(d.pop());
-      let updates = { deck: d }; if(mRole === "P1") updates.p1Hand = hand; else updates.p2Hand = hand;
-      if(calcScore(hand) > 21) { if(mRole === "P1") updates.currentTurn = "P2"; else { updates.currentTurn = "AI"; setTimeout(() => runMultiAiSequence(), 500); } }
+      let hand = mRole === "P1" ? [...(mData.p1Hand || [])] : [...(mData.p2Hand || [])];
+      let d = [...(mData.deck || [])]; 
+      hand.push(d.pop());
+      let updates = { deck: d }; 
+      if(mRole === "P1") updates.p1Hand = hand; else updates.p2Hand = hand;
+      
+      if(calcScore(hand) > 21) updates.currentTurn = mRole === "P1" ? "P2" : "AI";
       window.update(window.ref(window.db, 'rooms/' + mRoomCode), updates);
     }
+
     function multiStand() {
       let next = mRole === "P1" ? "P2" : "AI";
-      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: next }).then(() => { if(next === "AI") runMultiAiSequence(); });
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { currentTurn: next });
     }
+
     async function runMultiAiSequence() {
-      // 只有訪客 P2 負責觸發 AI 邏輯以保持同步
-      if(mRole !== "P2") return;
-      let dh = [...mData.dealerHand], p3 = [...mData.p3Hand], p4 = [...mData.p4Hand], dk = [...mData.deck];
+      let dh = [...(mData.dealerHand||[])], p3 = [...(mData.p3Hand||[])], p4 = [...(mData.p4Hand||[])], dk = [...(mData.deck||[])];
       while(calcScore(p3) < 17) p3.push(dk.pop());
       while(calcScore(p4) < 17) p4.push(dk.pop());
       while(calcScore(dh) < 17) dh.push(dk.pop());
       window.update(window.ref(window.db, 'rooms/' + mRoomCode), { p3Hand: p3, p4Hand: p4, dealerHand: dh, deck: dk, gameState: "finished", dealerReveal: true });
     }
 
-    // ================= 勝負評判 (共用) =================
+    // ================= 勝負評判 =================
     function judgeFinalResult(p1, p2, p3, p4, dealer) {
       const dS = calcScore(dealer); const scores = [p1,p2,p3,p4].map(h => calcScore(h));
       scores.forEach((s, i) => {
@@ -291,14 +334,25 @@
         else if(s < dS) { tag.innerText="【❌ 戰敗】"; tag.style.color="#888"; slot.style.borderColor="#334155"; }
         else { tag.innerText="【🔒 平局】"; tag.style.color="#9933ff"; slot.style.borderColor="#9933ff"; }
       });
+      
       if(!mAlerted) {
-        mAlerted = true; let myS = currentMode === "single" ? scores[0] : (mRole === "P1" ? scores[0] : scores[1]);
+        mAlerted = true; 
+        let myS = currentMode === "single" ? scores[0] : (mRole === "P1" ? scores[0] : scores[1]);
         setTimeout(() => {
-          if(myS > 21) alert("菜就多練👎"); else if(dS > 21) alert("🎉 莊家爆牌！你贏了！"); else if(myS > dS) alert("👑 最終打敗了 AI-ADO！"); else if(myS < dS) alert("你沒急吧🤡"); else alert("🔒 平手！");
+          if(myS > 21) alert("菜就多練👎"); 
+          else if(dS > 21) alert("🎉 莊家爆牌！你贏了！"); 
+          else if(myS > dS) alert("👑 最終打敗了 AI-ADO！"); 
+          else if(myS < dS) alert("你沒急吧🤡"); 
+          else alert("🔒 平手！");
         }, 600);
       }
     }
-    function multiRestart() { mAlerted = false; window.update(window.ref(window.db, 'rooms/' + mRoomCode), { status: "ready", gameState: "joining" }); }
+
+    function multiRestart() { 
+      mAlerted = false; 
+      window.aiTriggered = false;
+      window.update(window.ref(window.db, 'rooms/' + mRoomCode), { status: "ready", gameState: "joining" }); 
+    }
   </script>
 </body>
 </html>
