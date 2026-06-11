@@ -52,6 +52,9 @@
     .turn-indicator { color: #9933ff; font-weight: bold; font-size: 1.1rem; margin-top: 10px; text-align: center; min-height: 25px; }
     .thinking-blink { animation: blink 0.8s infinite alternate; color: #9933ff !important; }
     @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+    /* 新增：左下角版本號的 CSS */
+    .version-text { position: fixed; bottom: 10px; left: 15px; color: #94a3b8; font-size: 0.75rem; z-index: 100; pointer-events: none; opacity: 0.8; }
   </style>
 
   <script type="module">
@@ -75,8 +78,11 @@
 </head>
 <body>
   <div class="hacker-bg"></div>
+  
+  <div class="version-text">version : 1.0</div>
+
   <div class="container" id="main-menu">
-    <h1 class="title">⚡ JACK 21<span class="egg">🌹</span></h1>
+    <h1 class="title">⚡ BLACK JACK <span class="egg">🌹</span></h1>
     <p class="subtitle">System Status: Ready to Play // Designed for Ado Fans</p>
     <div class="menu-box">
       <button class="btn" onclick="startSingleMode()">▶ 單人模式 (人機對戰)</button>
@@ -94,7 +100,7 @@
   </div>
 
   <div id="game-table" class="game-table hidden">
-    <h2 class="table-title">⚡ JACK 21 ⚡</h2>
+    <h2 class="table-title">⚡ BLACK JACK ⚡</h2>
     <div class="dealer-section" id="slot-dealer">
       <div class="avatar-container"><div class="ado-css-avatar">💙🌹</div></div>
       <h3>[ HOST: ADO ]</h3>
