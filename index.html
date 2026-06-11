@@ -69,7 +69,7 @@
     .btn-sub:hover { background: #64748b; color: #fff; }
     .btn-sub-join { font-size: 0.9rem; padding: 10px 15px; border-color: #9933ff; color: #9933ff; }
     .btn-sub-join:hover { background: #9933ff; color: #fff; }
-    .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; }
+    .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; line-height: 1.4; }
 
     /* 牌桌設定 */
     .game-table {
@@ -104,12 +104,11 @@
     }
 
     .purple-line { border: 0; height: 1px; background: linear-gradient(90deg, transparent, #9933ff, transparent); margin: 20px 0; }
-    .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+    .players-grid { display: flex; justify-content: center; gap: 30px; margin-bottom: 25px; }
 
-    @media (max-width: 768px) { .players-grid { grid-template-columns: repeat(2, 1fr); } }
-
-    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 12px; text-align: center; }
+    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 20px; text-align: center; width: 40%; min-width: 200px; }
     .active-slot { border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.15); }
+    .turn-slot { border-color: #9933ff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.3); }
 
     .card-row { display: flex; justify-content: center; gap: 6px; min-height: 80px; margin: 10px 0; flex-wrap: wrap; }
     .card {
@@ -149,10 +148,378 @@
     .btn-back { border: 2px solid #64748b; color: #64748b; }
     .btn-back:hover { background: #64748b; color: #fff; box-shadow: 0 0 15px rgba(100, 116, 139, 0.4); }
 
-    .result-tag { font-weight: bold; display: block; margin-top: 5px; font-size: 0.85rem; }
-    .thinking-blink { animation: blink 0.8s infinite alternate; color: #9933ff !important; }
-    @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+    .result-tag { font-weight: bold; display: block; margin-top: 5px; font-size: 0.9rem; }
+    .turn-indicator { color: #9933ff; font-weight: bold; font-size: 1.2rem; margin-top: 10px; text-align: center; min-height: 30px; }
   </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // 你的 Firebase 配置
+    const firebaseConfig = {
+      apiKey: "AIzaSyAR2MfRuL7Bb3OArlvL3Bv6zlZ8lRkLMbM",
+      authDomain: "hihi-jack21.firebaseapp.com",
+      databaseURL: "https://hihi-jack21-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "hihi-jack21",
+      storageBucket: "hihi-jack21.firebasestorage.app",
+      messagingSenderId: "741255319700",
+      appId: "1:741255319700:web:cbbae33ebada7924292481"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentRoomCode = null;
+    let myRole = null; // "P1" 或 "P2"
+    let isMyTurn = false;
+    let localRoomData = null;
+
+    // 顯示多人連線選單
+    window.showMultiplayerMenu = function() {
+      document.getElementById("multi-menu").classList.toggle("hidden");
+    }
+
+    // 創建房間 (P1 房東)
+    window.createRoom = function() {
+      const randomCode = "ADO-" + Math.floor(1000 + Math.random() * 9000);
+      currentRoomCode = randomCode;
+      myRole = "P1";
+
+      const statusDisplay = document.getElementById("status-display");
+      statusDisplay.style.color = "#00ffcc";
+      statusDisplay.innerHTML = "🔑 房間創建中...";
+
+      // 初始化雲端房間數據
+      set(ref(db, 'rooms/' + randomCode), {
+        roomCode: randomCode,
+        status: "waiting",
+        p1Connected: true,
+        p2Connected: false,
+        deck: [],
+        dealerHand: [],
+        p1Hand: [],
+        p2Hand: [],
+        currentTurn: "P1", // P1 先操作
+        gameState: "joining", // joining, playing, finished
+        dealerReveal: false
+      }).then(() => {
+        statusDisplay.innerHTML = "🔑 房間建立成功！<br>請複製此代碼給朋友：<strong style='color:#9933ff'>" + randomCode + "</strong><br><span style='color:#e2e8f0;font-size:0.8rem;'>⏳ 等待朋友加入...</span>";
+        
+        // 開始監聽房間變化
+        listenToRoom(randomCode);
+      });
+    };
+
+    // 加入房間 (P2 訪客)
+    window.joinRoom = function() {
+      const codeInput = document.getElementById("room-code").value.trim().toUpperCase();
+      const statusDisplay = document.getElementById("status-display");
+      
+      if (codeInput === "") {
+        alert("請輸入房間代碼！");
+        return;
+      }
+
+      statusDisplay.style.color = "#94a3b8";
+      statusDisplay.innerText = "📡 正在連線至房間 [" + codeInput + "]...";
+
+      onValue(ref(db, 'rooms/' + codeInput), (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          statusDisplay.style.color = "#ff0055";
+          statusDisplay.innerText = "❌ 找不到此房間！";
+          return;
+        }
+        
+        if (myRole === null) { // 第一次加入
+          currentRoomCode = codeInput;
+          myRole = "P2";
+          
+          update(ref(db, 'rooms/' + codeInput), {
+            p2Connected: true,
+            status: "ready"
+          }).then(() => {
+            listenToRoom(codeInput);
+          });
+        }
+      }, { onlyOnce: true });
+    };
+
+    // 監聽房間動態與同步核心
+    function listenToRoom(roomCode) {
+      onValue(ref(db, 'rooms/' + roomCode), (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        localRoomData = data;
+
+        // 當兩人都準備就緒，由 P1 房東負責初始化洗牌並開局
+        if (myRole === "P1" && data.status === "ready" && data.gameState === "joining") {
+          startMultiplayerGameLogic();
+          return;
+        }
+
+        // 切換到遊戲桌畫面
+        if (data.gameState === "playing" || data.gameState === "finished") {
+          document.getElementById("main-menu").classList.add("hidden");
+          document.getElementById("game-table").classList.remove("hidden");
+          
+          // 更換為 Ado 頭像
+          document.getElementById("host-img").src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
+          
+          // 更新手牌畫面
+          updateMultiplayerUI(data);
+        }
+      });
+    }
+
+    // 房東初始化牌局
+    function startMultiplayerGameLogic() {
+      let newDeck = [];
+      const suits = ['♠', '♥', '♦', '♣'];
+      const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+      for (let suit of suits) {
+        for (let value of values) {
+          newDeck.push({ suit: suit, value: value });
+        }
+      }
+      // 洗牌
+      for (let i = newDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+      }
+
+      // 莊家與雙方發兩張牌
+      const dealerHand = [newDeck.pop(), newDeck.pop()];
+      const p1Hand = [newDeck.pop(), newDeck.pop()];
+      const p2Hand = [newDeck.pop(), newDeck.pop()];
+
+      update(ref(db, 'rooms/' + currentRoomCode), {
+        deck: newDeck,
+        dealerHand: dealerHand,
+        p1Hand: p1Hand,
+        p2Hand: p2Hand,
+        currentTurn: "P1",
+        gameState: "playing",
+        dealerReveal: false
+      });
+    }
+
+    // 同步刷新多人畫面
+    function updateMultiplayerUI(data) {
+      // 判斷當前輪到誰
+      isMyTurn = (data.currentTurn === myRole && data.gameState === "playing");
+      
+      const turnIndicator = document.getElementById("turn-indicator");
+      if (data.gameState === "playing") {
+        turnIndicator.innerText = isMyTurn ? "⚡ 輪到你了！請選擇要牌或停牌" : `⏳ 等待玩家 (${data.currentTurn}) 操作中...`;
+        document.getElementById("hit-btn").classList.remove("hidden");
+        document.getElementById("stand-btn").classList.remove("hidden");
+        document.getElementById("restart-btn").classList.add("hidden");
+      } else {
+        turnIndicator.innerText = "🏁 遊戲結束，結算點數！";
+        document.getElementById("hit-btn").classList.add("hidden");
+        document.getElementById("stand-btn").classList.add("hidden");
+        // 只有房東 P1 可以點重開
+        if (myRole === "P1") {
+          document.getElementById("restart-btn").classList.remove("hidden");
+        }
+      }
+
+      // 控制按鈕點擊狀態
+      document.getElementById("hit-btn").disabled = !isMyTurn;
+      document.getElementById("stand-btn").disabled = !isMyTurn;
+
+      // 渲染玩家 1 區域
+      renderZone("p1-cards", "p1-score", data.p1Hand, false);
+      document.getElementById("slot-p1").className = "player-slot" + (data.currentTurn === "P1" ? " turn-slot" : "") + (myRole === "P1" ? " active-slot" : "");
+      
+      // 渲染玩家 2 區域
+      renderZone("p2-cards", "p2-score", data.p2Hand, false);
+      document.getElementById("slot-p2").className = "player-slot" + (data.currentTurn === "P2" ? " turn-slot" : "") + (myRole === "P2" ? " active-slot" : "");
+
+      // 渲染莊家 AI-ADO 區域
+      const dealerCardsDiv = document.getElementById("dealer-cards");
+      const dealerScoreEl = document.getElementById("dealer-score");
+      dealerCardsDiv.innerHTML = "";
+      
+      if (!data.dealerReveal) {
+        if (data.dealerHand && data.dealerHand[0]) {
+          dealerCardsDiv.appendChild(createCardEl(data.dealerHand[0]));
+          for(let i=1; i<data.dealerHand.length; i++) dealerCardsDiv.appendChild(createBackCardEl());
+        }
+        dealerScoreEl.innerText = "??";
+      } else {
+        if (data.dealerHand) {
+          data.dealerHand.forEach(card => dealerCardsDiv.appendChild(createCardEl(card)));
+          dealerScoreEl.innerText = calcScore(data.dealerHand);
+        }
+        // 如果結算了，顯示最終贏家
+        judgeMultiplayerWinners(data);
+      }
+    }
+
+    function renderZone(divId, scoreId, hand, isHidden) {
+      const div = document.getElementById(divId);
+      const scoreEl = document.getElementById(scoreId);
+      if (!div || !scoreEl) return;
+      div.innerHTML = "";
+      if (!hand) return;
+
+      hand.forEach(card => div.appendChild(createCardEl(card)));
+      scoreEl.innerText = calcScore(hand);
+    }
+
+    function createCardEl(card) {
+      const el = document.createElement("div");
+      el.className = "card";
+      if (card.suit === '♥' || card.suit === '♦') {
+        el.style.color = "#ff0055"; el.style.borderColor = "#ff0055";
+      }
+      el.innerText = `${card.suit} ${card.value}`;
+      return el;
+    }
+
+    function createBackCardEl() {
+      const el = document.createElement("div");
+      el.className = "card back"; el.innerText = "⚡";
+      return el;
+    }
+
+    function calcScore(hand) {
+      if (!hand) return 0;
+      let score = 0; let hasAce = false;
+      for (let card of hand) {
+        if (['J', 'Q', 'K'].includes(card.value)) score += 10;
+        else if (card.value === 'A') { hasAce = true; score += 11; }
+        else score += parseInt(card.value);
+      }
+      if (score > 21 && hasAce) score -= 10;
+      return score;
+    }
+
+    // 多人要牌動作
+    window.hitCard = function() {
+      if (!isMyTurn || !localRoomData) return;
+      
+      let currentHand = myRole === "P1" ? [...localRoomData.p1Hand] : [...localRoomData.p2Hand];
+      let currentDeck = [...localRoomData.deck];
+      
+      const newCard = currentDeck.pop();
+      currentHand.push(newCard);
+
+      let updates = { deck: currentDeck };
+      if (myRole === "P1") updates.p1Hand = currentHand;
+      else updates.p2Hand = currentHand;
+
+      // 如果要牌後爆牌了，直接強制停牌
+      if (calcScore(currentHand) > 21) {
+        alert("💥 爆牌了！");
+        if (myRole === "P1") {
+          updates.currentTurn = "P2"; // 輪到 P2
+        } else {
+          updates.currentTurn = "dealer";
+          // 如果 P2 爆牌且是最後一棒，直接交給莊家補牌結算
+          setTimeout(() => { dealerAiTurn(); }, 500);
+        }
+      }
+
+      update(ref(db, 'rooms/' + currentRoomCode), updates);
+    };
+
+    // 多人停牌動作
+    window.standGame = function() {
+      if (!isMyTurn || !localRoomData) return;
+
+      let updates = {};
+      if (myRole === "P1") {
+        updates.currentTurn = "P2"; // P1 結束，換 P2
+        update(ref(db, 'rooms/' + currentRoomCode), updates);
+      } else {
+        updates.currentTurn = "dealer"; // P2 結束，換莊家
+        update(ref(db, 'rooms/' + currentRoomCode), updates).then(() => {
+          dealerAiTurn();
+        });
+      }
+    };
+
+    // 莊家補牌自動化邏輯 (由 P2 結束時觸發，並寫回雲端)
+    function dealerAiTurn() {
+      onValue(ref(db, 'rooms/' + currentRoomCode), (snapshot) => {
+        const data = snapshot.val();
+        if (!data || data.currentTurn !== "dealer") return;
+
+        let dealerHand = [...data.dealerHand];
+        let deck = [...data.deck];
+
+        // 莊家低於 17 点必須補牌
+        while (calcScore(dealerHand) < 17) {
+          dealerHand.push(deck.pop());
+        }
+
+        update(ref(db, 'rooms/' + currentRoomCode), {
+          dealerHand: dealerHand,
+          deck: deck,
+          currentTurn: "end",
+          gameState: "finished",
+          dealerReveal: true
+        });
+      }, { onlyOnce: true });
+    }
+
+    // 判斷輸贏並彈出迷因對話框
+    function judgeMultiplayerWinners(data) {
+      const dScore = calcScore(data.dealerHand);
+      const p1Score = calcScore(data.p1Hand);
+      const p2Score = calcScore(data.p2Hand);
+
+      const r1 = document.getElementById("result-p1");
+      const r2 = document.getElementById("result-p2");
+      
+      // P1 判定
+      if (p1Score > 21) { r1.innerText = "💥 爆牌 BUST"; r1.style.color = "#ff0055"; }
+      else if (dScore > 21 || p1Score > dScore) { r1.innerText = "🏆 獲勝 WIN"; r1.style.color = "#00ffcc"; }
+      else if (p1Score < dScore) { r1.innerText = "❌ 戰敗 LOSE"; r1.style.color = "#888"; }
+      else { r1.innerText = "🔒 平局 PUSH"; r1.style.color = "#9933ff"; }
+
+      // P2 判定
+      if (p2Score > 21) { r2.innerText = "💥 爆牌 BUST"; r2.style.color = "#ff0055"; }
+      else if (dScore > 21 || p2Score > dScore) { r2.innerText = "🏆 獲勝 WIN"; r2.style.color = "#00ffcc"; }
+      else if (p2Score < dScore) { r2.innerText = "❌ 戰敗 LOSE"; r2.style.color = "#888"; }
+      else { r2.innerText = "🔒 平局 PUSH"; r2.style.color = "#9933ff"; }
+
+      // 每個人在自己螢幕看見自己的迷因彈窗
+      myTimeoutAlert(myRole === "P1" ? p1Score : p2Score, dScore);
+    }
+
+    let alertTriggered = false;
+    function myTimeoutAlert(myScore, dScore) {
+      if (alertTriggered) return;
+      alertTriggered = true;
+      
+      setTimeout(() => {
+        if (myScore > 21) alert("菜就多練👎");
+        else if (dScore > 21) alert("🎉 莊家爆牌！你贏了！");
+        else if (myScore > dScore) alert("👑 最終點數勝過莊家！你成功破解了 Ado 的防禦！");
+        else if (myScore < dScore) alert("你沒急吧🤡");
+        else alert("🔒 平手！");
+      }, 600);
+    }
+
+    // 房東重開牌局
+    window.restartMultiplayerGame = function() {
+      alertTriggered = false;
+      update(ref(db, 'rooms/' + currentRoomCode), {
+        status: "ready",
+        gameState: "joining"
+      });
+    }
+
+    // 單人模式保留
+    window.startSinglePlayer = function() {
+      alert("單人模式已停用，請直接邀請同學使用「多人連機」功能！");
+    }
+  </script>
 </head>
 <body>
 
@@ -160,19 +527,18 @@
 
   <div class="container" id="main-menu">
     <h1 class="title">⚡ JACK 21<span class="egg">🌹</span></h1>
-    <p class="subtitle">System Status: Ready to Play // Designed for Ado Fans</p>
+    <p class="subtitle">System Status: Multiplayer Ready // Sync via Firebase</p>
     
     <div class="menu-box">
-      <button class="btn" onclick="startSinglePlayer()">▶ 單人模式 (人機對戰)</button>
-      <button class="btn btn-purple" onclick="showMultiplayerMenu()">🌐 多人連機 (1~4人)</button>
+      <button class="btn btn-purple" onclick="showMultiplayerMenu()">🌐 啟動多人真連機模式</button>
     </div>
     
     <div id="multi-menu" class="menu-box hidden">
-      <hr>
-      <button class="btn btn-sub" onclick="createRoom()">[ 創建房間並取得代碼 ]</button>
+      <hr style="border-color:#334155;">
+      <button class="btn btn-sub" onclick="createRoom()">[ 1. 點我創建房間・獲取代碼 ]</button>
       <div class="input-group">
-        <input type="text" id="room-code" placeholder="輸入朋友的房間代碼...">
-        <button class="btn btn-sub-join" onclick="joinRoom()">進入房間</button>
+        <input type="text" id="room-code" placeholder="輸入同學的房間代碼...">
+        <button class="btn btn-sub-join" onclick="joinRoom()">2. 進入房間</button>
       </div>
       <div id="status-display" class="status-text"></div>
     </div>
@@ -183,341 +549,37 @@
     
     <div class="dealer-section">
       <div class="avatar-container">
-        <img class="dealer-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop" alt="AI Host" id="host-img">
+        <img class="dealer-avatar" src="" alt="AI Host" id="host-img">
       </div>
       <h3>[ HOST: AI-ADO ]</h3>
       <div id="dealer-cards" class="card-row"></div>
       <p>目前點數: <span id="dealer-score">??</span></p>
     </div>
 
+    <div id="turn-indicator" class="turn-indicator">⏳ 等待連線同步中...</div>
+
     <hr class="purple-line">
 
     <div class="players-grid">
-      <div class="player-slot active-slot" id="slot-p1">
-        <h4>YOU (P1)</h4>
+      <div class="player-slot" id="slot-p1">
+        <h4>PLAYER_01 (房東)</h4>
         <div id="p1-cards" class="card-row"></div>
         <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
       </div>
 
       <div class="player-slot" id="slot-p2">
-        <h4>ROBOT_02 (AI)</h4>
+        <h4>PLAYER_02 (訪客)</h4>
         <div id="p2-cards" class="card-row"></div>
-        <p>點數: <span id="p2-score">??</span> <span id="result-p2" class="result-tag"></span></p>
-      </div>
-
-      <div class="player-slot" id="slot-p3">
-        <h4>ROBOT_03 (AI)</h4>
-        <div id="p3-cards" class="card-row"></div>
-        <p>點數: <span id="p3-score">??</span> <span id="result-p3" class="result-tag"></span></p>
-      </div>
-
-      <div class="player-slot" id="slot-p4">
-        <h4>ROBOT_04 (AI)</h4>
-        <div id="p4-cards" class="card-row"></div>
-        <p>點數: <span id="p4-score">??</span> <span id="result-p4" class="result-tag"></span></p>
+        <p>點數: <span id="p2-score">0</span> <span id="result-p2" class="result-tag"></span></p>
       </div>
     </div>
 
     <div class="control-panel">
       <button class="game-btn btn-hit" id="hit-btn" onclick="hitCard()">⚡ 要牌 (HIT)</button>
       <button class="game-btn btn-stand" id="stand-btn" onclick="standGame()">🔒 停牌 (STAND)</button>
-      
-      <button class="game-btn btn-restart hidden" id="restart-btn" onclick="initGame()">🔄 重開新局 (RESTART)</button>
-      <button class="game-btn btn-back hidden" id="back-btn" onclick="backToMainMenu()">🏠 回主畫面 (MENU)</button>
+      <button class="game-btn btn-restart hidden" id="restart-btn" onclick="restartMultiplayerGame()">🔄 再來一局 (房東專用)</button>
     </div>
   </div>
 
-  <script>
-    // ====== 遊戲全局狀態區變數 ======
-    let deck = [];
-    let dealerHand = [];
-    let p1Hand = [];
-    let p2Hand = [];
-    let p3Hand = [];
-    let p4Hand = [];
-    let revealAll = false;
-
-    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-    function startSinglePlayer() {
-      document.getElementById("main-menu").classList.add("hidden");
-      document.getElementById("game-table").classList.remove("hidden");
-      
-      const avatarImg = document.getElementById("host-img");
-      if (avatarImg) {
-        avatarImg.src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
-      }
-      
-      initGame();
-    }
-
-    function backToMainMenu() {
-      document.getElementById("game-table").classList.add("hidden");
-      document.getElementById("main-menu").classList.remove("hidden");
-    }
-
-    function initGame() {
-      deck = createDeck();
-      shuffle(deck);
-      revealAll = false;
-
-      document.getElementById("hit-btn").classList.remove("hidden");
-      document.getElementById("stand-btn").classList.remove("hidden");
-      document.getElementById("restart-btn").classList.add("hidden");
-      document.getElementById("back-btn").classList.add("hidden");
-      
-      for (let i = 1; i <= 4; i++) {
-        const resultTag = document.getElementById("result-p" + i);
-        if (resultTag) {
-          resultTag.innerText = "";
-          resultTag.className = "result-tag";
-        }
-        const slot = document.getElementById("slot-p" + i);
-        if (slot) slot.style.borderColor = (i === 1) ? "#00ffcc" : "#334155";
-      }
-
-      dealerHand = [drawCard(), drawCard()];
-      p1Hand = [drawCard(), drawCard()];
-      p2Hand = [drawCard(), drawCard()];
-      p3Hand = [drawCard(), drawCard()];
-      p4Hand = [drawCard(), drawCard()];
-
-      updateUI();
-    }
-
-    async function runRobotTurnAsync(robotId, hand) {
-      const resultTag = document.getElementById("result-" + robotId);
-      const slotEl = document.getElementById("slot-" + robotId);
-      if (!slotEl || !resultTag) return;
-      
-      slotEl.style.borderColor = "#9933ff";
-      resultTag.className = "result-tag thinking-blink";
-      resultTag.innerText = "💬 思考中...";
-      await sleep(1500 + Math.random() * 1000);
-      
-      while (calculateScore(hand) < 17) {
-        resultTag.innerText = "⚡ 正在要牌...";
-        await sleep(1000);
-        hand.push(drawCard());
-        updateUI();
-        await sleep(1200);
-        if (calculateScore(hand) > 21) break;
-      }
-      
-      resultTag.className = "result-tag";
-      resultTag.style.color = "#9933ff";
-      resultTag.innerText = "🔒 選擇停牌 (STAND)";
-      slotEl.style.borderColor = "#334155";
-      await sleep(400);
-    }
-
-    async function standGame() {
-      document.getElementById("hit-btn").classList.add("hidden");
-      document.getElementById("stand-btn").classList.add("hidden");
-      
-      await runRobotTurnAsync("p2", p2Hand);
-      await runRobotTurnAsync("p3", p3Hand);
-      await runRobotTurnAsync("p4", p4Hand);
-      
-      const dealerScoreText = document.getElementById("dealer-score");
-      while (calculateScore(dealerHand) < 17) {
-        if (dealerScoreText) dealerScoreText.innerHTML = "<span class='thinking-blink' style='color:#9933ff'>⏳ 莊家補牌中...</span>";
-        await sleep(1200);
-        dealerHand.push(drawCard());
-        updateUI();
-      }
-      
-      revealAll = true; 
-      updateUI(); 
-      
-      judgeWinners();
-      document.getElementById("restart-btn").classList.remove("hidden");
-      document.getElementById("back-btn").classList.remove("hidden");
-    }
-
-    function createDeck() {
-      const suits = ['♠', '♥', '♦', '♣'];
-      const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-      let newDeck = [];
-      for (let suit of suits) {
-        for (let value of values) {
-          newDeck.push({ suit: suit, value: value });
-        }
-      }
-      return newDeck;
-    }
-
-    // 洗牌
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-      }
-    }
-
-    function drawCard() {
-      if (deck.length === 0) {
-        deck = createDeck();
-        shuffle(deck);
-      }
-      return deck.pop();
-    }
-
-    function calculateScore(hand) {
-      if (!hand || !Array.isArray(hand)) return 0;
-      let score = 0;
-      let hasAce = false;
-      for (let card of hand) {
-        if (!card || !card.value) continue;
-        if (['J', 'Q', 'K'].includes(card.value)) score += 10;
-        else if (card.value === 'A') { hasAce = true; score += 11; }
-        else score += parseInt(card.value);
-      }
-      if (score > 21 && hasAce) score -= 10;
-      return score;
-    }
-
-    function createCardElement(card) {
-      const cardEl = document.createElement("div");
-      cardEl.className = "card";
-      if (card.suit === '♥' || card.suit === '♦') {
-        cardEl.style.color = "#ff0055";
-        cardEl.style.borderColor = "#ff0055";
-        cardEl.style.boxShadow = "0 0 5px rgba(255, 0, 85, 0.4)";
-      }
-      cardEl.innerText = card.suit + " " + card.value;
-      return cardEl;
-    }
-
-    function createBackCardElement() {
-      const backCard = document.createElement("div");
-      backCard.className = "card back";
-      backCard.innerText = "⚡";
-      return backCard;
-    }
-
-    function updateUI() {
-      renderPlayerZone("p1-cards", "p1-score", p1Hand, false);
-      renderPlayerZone("p2-cards", "p2-score", p2Hand, !revealAll);
-      renderPlayerZone("p3-cards", "p3-score", p3Hand, !revealAll);
-      renderPlayerZone("p4-cards", "p4-score", p4Hand, !revealAll);
-
-      const dealerCardsDiv = document.getElementById("dealer-cards");
-      const dealerScoreEl = document.getElementById("dealer-score");
-      if (dealerCardsDiv && dealerScoreEl) {
-        dealerCardsDiv.innerHTML = "";
-        if (!revealAll) {
-          if (dealerHand[0]) dealerCardsDiv.appendChild(createCardElement(dealerHand[0]));
-          for (let i = 1; i < dealerHand.length; i++) {
-            dealerCardsDiv.appendChild(createBackCardElement());
-          }
-          dealerScoreEl.innerText = "??";
-        } else {
-          dealerHand.forEach(card => {
-            if (card) dealerCardsDiv.appendChild(createCardElement(card));
-          });
-          dealerScoreEl.innerText = calculateScore(dealerHand);
-        }
-      }
-    }
-
-    function renderPlayerZone(cardsDivId, scoreId, hand, isHidden) {
-      const cardsDiv = document.getElementById(cardsDivId);
-      const scoreEl = document.getElementById(scoreId);
-      if (!cardsDiv || !scoreEl) return;
-      cardsDiv.innerHTML = "";
-      
-      if (isHidden) {
-        hand.forEach(() => { cardsDiv.appendChild(createBackCardElement()); });
-        scoreEl.innerText = "??";
-      } else {
-        hand.forEach(card => { if (card) cardsDiv.appendChild(createCardElement(card)); });
-        scoreEl.innerText = calculateScore(hand);
-      }
-    }
-
-    function hitCard() {
-      if (document.getElementById("hit-btn").classList.contains("hidden")) return;
-      p1Hand.push(drawCard());
-      updateUI();
-      
-      if (calculateScore(p1Hand) > 21) {
-        setTimeout(() => {
-          alert("💥 ERROR: 你爆牌了！");
-          standGame();
-        }, 300);
-      }
-    }
-
-    function judgeWinners() {
-      const dealerScore = calculateScore(dealerHand);
-      const p1Score = calculateScore(p1Hand);
-      const players = [
-        { id: "p1", hand: p1Hand },
-        { id: "p2", hand: p2Hand },
-        { id: "p3", hand: p3Hand },
-        { id: "p4", hand: p4Hand }
-      ];
-
-      players.forEach(p => {
-        const pScore = calculateScore(p.hand);
-        const resultTag = document.getElementById("result-" + p.id);
-        const slotEl = document.getElementById("slot-" + p.id);
-        if (!resultTag || !slotEl) return;
-        
-        if (pScore > 21) {
-          resultTag.innerText = "【💥 爆牌 BUST】";
-          resultTag.style.color = "#ff0055";
-          slotEl.style.borderColor = "#ff0055";
-        } else if (dealerScore > 21 || pScore > dealerScore) {
-          resultTag.innerText = "【🏆 獲勝 WIN】";
-          resultTag.style.color = "#00ffcc";
-          slotEl.style.borderColor = "#00ffcc";
-        } else if (pScore < dealerScore) {
-          resultTag.innerText = "【❌ 戰敗 LOSE】";
-          resultTag.style.color = "#888";
-          slotEl.style.borderColor = "#334155";
-        } else {
-          resultTag.innerText = "【🔒 平局 PUSH】";
-          resultTag.style.color = "#9933ff";
-          slotEl.style.borderColor = "#9933ff";
-        }
-      });
-
-      setTimeout(() => {
-        if (p1Score > 21) alert("菜就多練👎");
-        else if (dealerScore > 21) alert("🎉 莊家爆牌！恭喜你贏得本局！");
-        else if (p1Score > dealerScore) alert("👑 最終點數勝過莊家！你成功打敗了 AI-ADO！");
-        else if (p1Score < dealerScore) alert("你沒急吧🤡");
-        else alert("🔒 點數與莊家相同，平手！");
-      }, 500);
-    }
-
-    function showMultiplayerMenu() { document.getElementById("multi-menu").classList.toggle("hidden"); }
-    
-    function createRoom() {
-      const randomCode = "ADO-" + Math.floor(1000 + Math.random() * 9000);
-      const statusDisplay = document.getElementById("status-display");
-      if (statusDisplay) {
-        statusDisplay.style.color = "#00ffcc";
-        statusDisplay.innerHTML = "🔑 房間創建成功！<br>請複製此代碼給朋友：<strong style='color:#9933ff'>" + randomCode + "</strong>";
-      }
-    }
-    
-    function joinRoom() {
-      const codeInput = document.getElementById("room-code").value;
-      const statusDisplay = document.getElementById("status-display");
-      if (!statusDisplay) return;
-      if (codeInput.trim() === "") {
-        statusDisplay.style.color = "#ff0055";
-        statusDisplay.innerText = "❌ 錯誤：請先輸入房間代碼！";
-      } else {
-        statusDisplay.style.color = "#00ffcc";
-        statusDisplay.innerText = "📡 正在連線至房間 [" + codeInput + "]... 偵測到訊號源！";
-      }
-    }
-  </script>
 </body>
 </html>
