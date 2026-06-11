@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ JACK 21</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0f1d;
+      color: #e2e8f0;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .hacker-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(180deg, rgba(10,15,29,0.95) 0%, rgba(5,7,12,0.98) 100%);
+      z-index: -1;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 40px;
+      border-radius: 12px;
+      border: 2px solid #00ffcc;
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      color: #00ffcc;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+      margin-bottom: 10px;
+    }
+
+    .egg { color: #ff0055; text-shadow: 0 0 10px #ff0055; }
+    .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 30px; }
+    .menu-box { display: flex; flex-direction: column; gap: 15px; }
+
+    .btn {
+      background: transparent;
+      border: 2px solid #00ffcc;
+      color: #00ffcc;
+      padding: 15px 25px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .btn:hover { background: #00ffcc; color: #0a0f1d; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); }
+    .btn-purple { border-color: #9933ff; color: #9933ff; }
+    .btn-purple:hover { background: #9933ff; color: #fff; box-shadow: 0 0 20px rgba(153, 51, 255, 0.4); }
+    .hidden { display: none !important; }
+
+    .input-group { display: flex; gap: 10px; margin-top: 10px; }
+    input[type="text"] { flex: 1; background: rgba(30, 41, 59, 0.8); border: 1px solid #9933ff; border-radius: 6px; padding: 10px; color: #fff; font-family: inherit; }
+    .btn-sub { font-size: 0.9rem; padding: 8px; border-color: #64748b; color: #64748b; }
+    .btn-sub:hover { background: #64748b; color: #fff; }
+    .btn-sub-join { font-size: 0.9rem; padding: 10px 15px; border-color: #9933ff; color: #9933ff; }
+    .btn-sub-join:hover { background: #9933ff; color: #fff; }
+    .status-text { margin-top: 15px; font-size: 0.9rem; min-height: 20px; }
+
+    /* 牌桌設定 */
+    .game-table {
+      width: 92%;
+      max-width: 950px;
+      background: rgba(15, 23, 42, 0.93);
+      border: 2px solid #00ffcc;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 0 40px rgba(0, 255, 204, 0.15);
+      margin: 10px auto;
+    }
+
+    .table-title { text-align: center; color: #00ffcc; font-size: 1.5rem; margin: 0 0 20px 0; }
+
+    .dealer-section {
+      text-align: center;
+      background: rgba(30, 41, 59, 0.4);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px dashed #00ffcc;
+    }
+
+    .avatar-container { display: flex; justify-content: center; margin-bottom: 8px; }
+    .dealer-avatar {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      border: 2px solid #00ffcc;
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.5);
+      object-fit: cover;
+    }
+
+    .purple-line { border: 0; height: 1px; background: linear-gradient(90deg, transparent, #9933ff, transparent); margin: 20px 0; }
+    .players-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+
+    @media (max-width: 768px) { .players-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .player-slot { background: rgba(30, 41, 59, 0.25); border: 2px solid #334155; border-radius: 10px; padding: 12px; text-align: center; }
+    .active-slot { border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.15); }
+
+    .card-row { display: flex; justify-content: center; gap: 6px; min-height: 80px; margin: 10px 0; flex-wrap: wrap; }
+    .card {
+      width: 48px;
+      height: 72px;
+      background: #0f172a;
+      border: 2px solid #00ffcc;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #00ffcc;
+      box-shadow: 0 0 6px rgba(0, 255, 204, 0.2);
+      animation: cardIn 0.3s ease forwards;
+    }
+
+    @keyframes cardIn {
+      0% { opacity: 0; transform: translateY(-15px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .card.back { border-color: #9933ff; color: #9933ff; background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%); }
+
+    /* 底部操作控制列 */
+    .control-panel { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+    .game-btn { background: transparent; padding: 12px 30px; font-size: 1rem; font-weight: bold; font-family: inherit; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+
+    .btn-hit { border: 2px solid #00ffcc; color: #00ffcc; }
+    .btn-hit:hover { background: #00ffcc; color: #0a0f1d; box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); }
+    .btn-stand { border: 2px solid #ff0055; color: #ff0055; }
+    .btn-stand:hover { background: #ff0055; color: #fff; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
+
+    .btn-restart { border: 2px solid #9933ff; color: #9933ff; }
+    .btn-restart:hover { background: #9933ff; color: #fff; box-shadow: 0 0 15px rgba(153, 51, 255, 0.4); }
+    .btn-back { border: 2px solid #64748b; color: #64748b; }
+    .btn-back:hover { background: #64748b; color: #fff; box-shadow: 0 0 15px rgba(100, 116, 139, 0.4); }
+
+    .result-tag { font-weight: bold; display: block; margin-top: 5px; font-size: 0.85rem; }
+    .thinking-blink { animation: blink 0.8s infinite alternate; color: #9933ff !important; }
+    @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <div class="hacker-bg"></div>
+
+  <div class="container" id="main-menu">
+    <h1 class="title">⚡ JACK 21<span class="egg">🌹</span></h1>
+    <p class="subtitle">System Status: Ready to Play // Designed for Ado Fans</p>
+    
+    <div class="menu-box">
+      <button class="btn" onclick="startSinglePlayer()">▶ 單人模式 (人機對戰)</button>
+      <button class="btn btn-purple" onclick="showMultiplayerMenu()">🌐 多人連機 (1~4人)</button>
+    </div>
+    
+    <div id="multi-menu" class="menu-box hidden">
+      <hr>
+      <button class="btn btn-sub" onclick="createRoom()">[ 創建房間並取得代碼 ]</button>
+      <div class="input-group">
+        <input type="text" id="room-code" placeholder="輸入朋友的房間代碼...">
+        <button class="btn btn-sub-join" onclick="joinRoom()">進入房間</button>
+      </div>
+      <div id="status-display" class="status-text"></div>
+    </div>
+  </div>
+
+  <div id="game-table" class="game-table hidden">
+    <h2 class="table-title">⚡ JACK 21 ⚡</h2>
+    
+    <div class="dealer-section">
+      <div class="avatar-container">
+        <img class="dealer-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop" alt="AI Host" id="host-img">
+      </div>
+      <h3>[ HOST: AI-ADO ]</h3>
+      <div id="dealer-cards" class="card-row"></div>
+      <p>目前點數: <span id="dealer-score">??</span></p>
+    </div>
+
+    <hr class="purple-line">
+
+    <div class="players-grid">
+      <div class="player-slot active-slot" id="slot-p1">
+        <h4>YOU (P1)</h4>
+        <div id="p1-cards" class="card-row"></div>
+        <p>點數: <span id="p1-score">0</span> <span id="result-p1" class="result-tag"></span></p>
+      </div>
+
+      <div class="player-slot" id="slot-p2">
+        <h4>ROBOT_02 (AI)</h4>
+        <div id="p2-cards" class="card-row"></div>
+        <p>點數: <span id="p2-score">??</span> <span id="result-p2" class="result-tag"></span></p>
+      </div>
+
+      <div class="player-slot" id="slot-p3">
+        <h4>ROBOT_03 (AI)</h4>
+        <div id="p3-cards" class="card-row"></div>
+        <p>點數: <span id="p3-score">??</span> <span id="result-p3" class="result-tag"></span></p>
+      </div>
+
+      <div class="player-slot" id="slot-p4">
+        <h4>ROBOT_04 (AI)</h4>
+        <div id="p4-cards" class="card-row"></div>
+        <p>點數: <span id="p4-score">??</span> <span id="result-p4" class="result-tag"></span></p>
+      </div>
+    </div>
+
+    <div class="control-panel">
+      <button class="game-btn btn-hit" id="hit-btn" onclick="hitCard()">⚡ 要牌 (HIT)</button>
+      <button class="game-btn btn-stand" id="stand-btn" onclick="standGame()">🔒 停牌 (STAND)</button>
+      
+      <button class="game-btn btn-restart hidden" id="restart-btn" onclick="initGame()">🔄 重開新局 (RESTART)</button>
+      <button class="game-btn btn-back hidden" id="back-btn" onclick="backToMainMenu()">🏠 回主畫面 (MENU)</button>
+    </div>
+  </div>
+
+  <script>
+    // ====== 遊戲全局狀態區變數 ======
+    let deck = [];
+    let dealerHand = [];
+    let p1Hand = [];
+    let p2Hand = [];
+    let p3Hand = [];
+    let p4Hand = [];
+    let revealAll = false;
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function startSinglePlayer() {
+      document.getElementById("main-menu").classList.add("hidden");
+      document.getElementById("game-table").classList.remove("hidden");
+      
+      const avatarImg = document.getElementById("host-img");
+      if (avatarImg) {
+        avatarImg.src = "https://www.universal-music.co.jp/ado/wp-content/uploads/sites/443/2021/01/ado_profile.jpg";
+      }
+      
+      initGame();
+    }
+
+    function backToMainMenu() {
+      document.getElementById("game-table").classList.add("hidden");
+      document.getElementById("main-menu").classList.remove("hidden");
+    }
+
+    function initGame() {
+      deck = createDeck();
+      shuffle(deck);
+      revealAll = false;
+
+      document.getElementById("hit-btn").classList.remove("hidden");
+      document.getElementById("stand-btn").classList.remove("hidden");
+      document.getElementById("restart-btn").classList.add("hidden");
+      document.getElementById("back-btn").classList.add("hidden");
+      
+      for (let i = 1; i <= 4; i++) {
+        const resultTag = document.getElementById("result-p" + i);
+        if (resultTag) {
+          resultTag.innerText = "";
+          resultTag.className = "result-tag";
+        }
+        const slot = document.getElementById("slot-p" + i);
+        if (slot) slot.style.borderColor = (i === 1) ? "#00ffcc" : "#334155";
+      }
+
+      dealerHand = [drawCard(), drawCard()];
+      p1Hand = [drawCard(), drawCard()];
+      p2Hand = [drawCard(), drawCard()];
+      p3Hand = [drawCard(), drawCard()];
+      p4Hand = [drawCard(), drawCard()];
+
+      updateUI();
+    }
+
+    async function runRobotTurnAsync(robotId, hand) {
+      const resultTag = document.getElementById("result-" + robotId);
+      const slotEl = document.getElementById("slot-" + robotId);
+      if (!slotEl || !resultTag) return;
+      
+      slotEl.style.borderColor = "#9933ff";
+      resultTag.className = "result-tag thinking-blink";
+      resultTag.innerText = "💬 思考中...";
+      await sleep(1500 + Math.random() * 1000);
+      
+      while (calculateScore(hand) < 17) {
+        resultTag.innerText = "⚡ 正在要牌...";
+        await sleep(1000);
+        hand.push(drawCard());
+        updateUI();
+        await sleep(1200);
+        if (calculateScore(hand) > 21) break;
+      }
+      
+      resultTag.className = "result-tag";
+      resultTag.style.color = "#9933ff";
+      resultTag.innerText = "🔒 選擇停牌 (STAND)";
+      slotEl.style.borderColor = "#334155";
+      await sleep(400);
+    }
+
+    async function standGame() {
+      document.getElementById("hit-btn").classList.add("hidden");
+      document.getElementById("stand-btn").classList.add("hidden");
+      
+      await runRobotTurnAsync("p2", p2Hand);
+      await runRobotTurnAsync("p3", p3Hand);
+      await runRobotTurnAsync("p4", p4Hand);
+      
+      const dealerScoreText = document.getElementById("dealer-score");
+      while (calculateScore(dealerHand) < 17) {
+        if (dealerScoreText) dealerScoreText.innerHTML = "<span class='thinking-blink' style='color:#9933ff'>⏳ 莊家補牌中...</span>";
+        await sleep(1200);
+        dealerHand.push(drawCard());
+        updateUI();
+      }
+      
+      revealAll = true; 
+      updateUI(); 
+      
+      judgeWinners();
+      document.getElementById("restart-btn").classList.remove("hidden");
+      document.getElementById("back-btn").classList.remove("hidden");
+    }
+
+    function createDeck() {
+      const suits = ['♠', '♥', '♦', '♣'];
+      const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+      let newDeck = [];
+      for (let suit of suits) {
+        for (let value of values) {
+          newDeck.push({ suit: suit, value: value });
+        }
+      }
+      return newDeck;
+    }
+
+    // 洗牌
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+    }
+
+    function drawCard() {
+      if (deck.length === 0) {
+        deck = createDeck();
+        shuffle(deck);
+      }
+      return deck.pop();
+    }
+
+    function calculateScore(hand) {
+      if (!hand || !Array.isArray(hand)) return 0;
+      let score = 0;
+      let hasAce = false;
+      for (let card of hand) {
+        if (!card || !card.value) continue;
+        if (['J', 'Q', 'K'].includes(card.value)) score += 10;
+        else if (card.value === 'A') { hasAce = true; score += 11; }
+        else score += parseInt(card.value);
+      }
+      if (score > 21 && hasAce) score -= 10;
+      return score;
+    }
+
+    function createCardElement(card) {
+      const cardEl = document.createElement("div");
+      cardEl.className = "card";
+      if (card.suit === '♥' || card.suit === '♦') {
+        cardEl.style.color = "#ff0055";
+        cardEl.style.borderColor = "#ff0055";
+        cardEl.style.boxShadow = "0 0 5px rgba(255, 0, 85, 0.4)";
+      }
+      cardEl.innerText = card.suit + " " + card.value;
+      return cardEl;
+    }
+
+    function createBackCardElement() {
+      const backCard = document.createElement("div");
+      backCard.className = "card back";
+      backCard.innerText = "⚡";
+      return backCard;
+    }
+
+    function updateUI() {
+      renderPlayerZone("p1-cards", "p1-score", p1Hand, false);
+      renderPlayerZone("p2-cards", "p2-score", p2Hand, !revealAll);
+      renderPlayerZone("p3-cards", "p3-score", p3Hand, !revealAll);
+      renderPlayerZone("p4-cards", "p4-score", p4Hand, !revealAll);
+
+      const dealerCardsDiv = document.getElementById("dealer-cards");
+      const dealerScoreEl = document.getElementById("dealer-score");
+      if (dealerCardsDiv && dealerScoreEl) {
+        dealerCardsDiv.innerHTML = "";
+        if (!revealAll) {
+          if (dealerHand[0]) dealerCardsDiv.appendChild(createCardElement(dealerHand[0]));
+          for (let i = 1; i < dealerHand.length; i++) {
+            dealerCardsDiv.appendChild(createBackCardElement());
+          }
+          dealerScoreEl.innerText = "??";
+        } else {
+          dealerHand.forEach(card => {
+            if (card) dealerCardsDiv.appendChild(createCardElement(card));
+          });
+          dealerScoreEl.innerText = calculateScore(dealerHand);
+        }
+      }
+    }
+
+    function renderPlayerZone(cardsDivId, scoreId, hand, isHidden) {
+      const cardsDiv = document.getElementById(cardsDivId);
+      const scoreEl = document.getElementById(scoreId);
+      if (!cardsDiv || !scoreEl) return;
+      cardsDiv.innerHTML = "";
+      
+      if (isHidden) {
+        hand.forEach(() => { cardsDiv.appendChild(createBackCardElement()); });
+        scoreEl.innerText = "??";
+      } else {
+        hand.forEach(card => { if (card) cardsDiv.appendChild(createCardElement(card)); });
+        scoreEl.innerText = calculateScore(hand);
+      }
+    }
+
+    function hitCard() {
+      if (document.getElementById("hit-btn").classList.contains("hidden")) return;
+      p1Hand.push(drawCard());
+      updateUI();
+      
+      if (calculateScore(p1Hand) > 21) {
+        setTimeout(() => {
+          alert("💥 ERROR: 你爆牌了！");
+          standGame();
+        }, 300);
+      }
+    }
+
+    function judgeWinners() {
+      const dealerScore = calculateScore(dealerHand);
+      const p1Score = calculateScore(p1Hand);
+      const players = [
+        { id: "p1", hand: p1Hand },
+        { id: "p2", hand: p2Hand },
+        { id: "p3", hand: p3Hand },
+        { id: "p4", hand: p4Hand }
+      ];
+
+      players.forEach(p => {
+        const pScore = calculateScore(p.hand);
+        const resultTag = document.getElementById("result-" + p.id);
+        const slotEl = document.getElementById("slot-" + p.id);
+        if (!resultTag || !slotEl) return;
+        
+        if (pScore > 21) {
+          resultTag.innerText = "【💥 爆牌 BUST】";
+          resultTag.style.color = "#ff0055";
+          slotEl.style.borderColor = "#ff0055";
+        } else if (dealerScore > 21 || pScore > dealerScore) {
+          resultTag.innerText = "【🏆 獲勝 WIN】";
+          resultTag.style.color = "#00ffcc";
+          slotEl.style.borderColor = "#00ffcc";
+        } else if (pScore < dealerScore) {
+          resultTag.innerText = "【❌ 戰敗 LOSE】";
+          resultTag.style.color = "#888";
+          slotEl.style.borderColor = "#334155";
+        } else {
+          resultTag.innerText = "【🔒 平局 PUSH】";
+          resultTag.style.color = "#9933ff";
+          slotEl.style.borderColor = "#9933ff";
+        }
+      });
+
+      setTimeout(() => {
+        if (p1Score > 21) alert("菜就多練👎");
+        else if (dealerScore > 21) alert("🎉 莊家爆牌！恭喜你贏得本局！");
+        else if (p1Score > dealerScore) alert("👑 最終點數勝過莊家！你成功打敗了 AI-ADO！");
+        else if (p1Score < dealerScore) alert("你沒急吧🤡");
+        else alert("🔒 點數與莊家相同，平手！");
+      }, 500);
+    }
+
+    function showMultiplayerMenu() { document.getElementById("multi-menu").classList.toggle("hidden"); }
+    
+    function createRoom() {
+      const randomCode = "ADO-" + Math.floor(1000 + Math.random() * 9000);
+      const statusDisplay = document.getElementById("status-display");
+      if (statusDisplay) {
+        statusDisplay.style.color = "#00ffcc";
+        statusDisplay.innerHTML = "🔑 房間創建成功！<br>請複製此代碼給朋友：<strong style='color:#9933ff'>" + randomCode + "</strong>";
+      }
+    }
+    
+    function joinRoom() {
+      const codeInput = document.getElementById("room-code").value;
+      const statusDisplay = document.getElementById("status-display");
+      if (!statusDisplay) return;
+      if (codeInput.trim() === "") {
+        statusDisplay.style.color = "#ff0055";
+        statusDisplay.innerText = "❌ 錯誤：請先輸入房間代碼！";
+      } else {
+        statusDisplay.style.color = "#00ffcc";
+        statusDisplay.innerText = "📡 正在連線至房間 [" + codeInput + "]... 偵測到訊號源！";
+      }
+    }
+  </script>
+</body>
+</html>
